@@ -19,7 +19,10 @@ sf::Vector2f SteeringBehaviours::calculate() {
 	if (!parent)
 		return sf::Vector2f(0, 0);
 
-	return wander() + obstacleAvoidance(parent->player->game->obstacles, parent->player->game->enemies) + wallAvoidance();
+    // tegowanie pod zachowania grupowe
+    TagNeighbors(parent, parent->player->game->enemies, NEIGHBOR_RADIUS);
+
+	return cohesion(parent->player->game->enemies) + obstacleAvoidance(parent->player->game->obstacles, parent->player->game->enemies) + wallAvoidance();
 }
 
 // --- seek ---
@@ -245,4 +248,199 @@ void SteeringBehaviours::debugDrawIntersections(sf::RenderWindow& window, const 
         highlight.setOutlineThickness(2.0f);
         window.draw(highlight);
     }
+}
+
+// --- hide ---
+
+// znajduje najlepszą przeszkodę do ukrycia się przed graczem
+sf::Vector2f SteeringBehaviours::hide(const std::vector<std::unique_ptr<Obstacle>>& obstacles) {
+    if (!parent || !parent->player)
+        return sf::Vector2f(0, 0);
+
+    float distToClosest = std::numeric_limits<float>::max();
+    sf::Vector2f bestHidingSpot;
+
+    // przejdź przez wszystkie przeszkody i znajdź najbliższy punkt ukrycia
+    for (const auto& obstacle : obstacles) {
+        sf::Vector2f hidingSpot = getHidingPosition(
+            obstacle->getPosition(),
+            obstacle->collider.radius,
+            parent->player->getPosition()
+        );
+
+        // oblicz odległość bota do tego punktu ukrycia
+        float dist = distanceVec2D(parent->getPosition(), hidingSpot);
+
+        // jeśli to najbliższy punkt ukrycia do tej pory, zapamiętaj go
+        if (dist < distToClosest) {
+            distToClosest = dist;
+            bestHidingSpot = hidingSpot;
+        }
+    }
+
+    // TODO: później zamienić seek na arrive? (czyli tego co jest użyte do dotarcia do punktu ukrycia)
+    // jeśli znaleziono punkt ukrycia, użyj arrive do dotarcia tam
+    if (distToClosest != std::numeric_limits<float>::max()) {
+        sf::Vector2f desiredVel = normalizeVec2D(bestHidingSpot - parent->getPosition()) * MAX_ENEMY_SPEED;
+        return desiredVel - parent->velocity;
+    }
+
+    // jeśli nie ma przeszkód, po prostu uciekaj od gracza (evade)
+    sf::Vector2f desiredVel = normalizeVec2D(parent->getPosition() - parent->player->getPosition()) * MAX_ENEMY_SPEED;
+    return desiredVel - parent->velocity;
+}
+
+// funkcja pomocnicza - blicza pozycję ukrycia za przeszkodą
+sf::Vector2f SteeringBehaviours::getHidingPosition(const sf::Vector2f& posOb, float radiusOb, const sf::Vector2f& posTarget) {
+    // oblicz jak daleko od krawędzi przeszkody ma być bot
+    const float DistanceFromBoundary = 30.0f;
+    float distAway = radiusOb + DistanceFromBoundary;
+
+    // oblicz kierunek od gracza (target) do przeszkody
+    sf::Vector2f toOb = normalizeVec2D(posOb - posTarget);
+
+    // przeskaluj do odpowiedniej odległości i dodaj do pozycji przeszkody
+    return toOb * distAway + posOb;
+}
+
+// --- flee ---
+
+// ucieka od zadanej pozycji + tylko w zasięgu panic distance
+sf::Vector2f SteeringBehaviours::flee(const sf::Vector2f& targetPos) {
+    if (!parent)
+        return sf::Vector2f(0, 0);
+
+    float distSq = (parent->getPosition().x - targetPos.x) * (parent->getPosition().x - targetPos.x) +
+                   (parent->getPosition().y - targetPos.y) * (parent->getPosition().y - targetPos.y);
+
+    if (distSq > PANIC_DISTANCE_SQ)
+        return sf::Vector2f(0, 0);
+
+    sf::Vector2f desired_vel = normalizeVec2D(parent->getPosition() - targetPos) * MAX_ENEMY_SPEED;
+    return (desired_vel - parent->velocity);
+}
+
+// --- evade ---
+
+// ucieka od gracza przewidując jego przyszłą pozycję
+sf::Vector2f SteeringBehaviours::evade() {
+    if (!parent || !parent->player)
+        return sf::Vector2f(0, 0);
+
+    sf::Vector2f toPursuer = parent->player->getPosition() - parent->getPosition();
+
+    // czas wyprzedzenia jest proporcjonalny do odległości między graczem a botem i odwrotnie proporcjonalny do sumy ich prędkości
+    float pursuerSpeed = std::sqrt(parent->player->velocity.x * parent->player->velocity.x + parent->player->velocity.y * parent->player->velocity.y);
+
+    float toPursuerLength = std::sqrt(toPursuer.x * toPursuer.x + toPursuer.y * toPursuer.y);
+    float lookAheadTime = toPursuerLength / (MAX_ENEMY_SPEED + pursuerSpeed);
+
+    // uciekaj od przewidywanej przyszłej pozycji gracza
+    sf::Vector2f predictedPos = parent->player->getPosition() + parent->player->velocity * lookAheadTime;
+    return flee(predictedPos);
+}
+
+// --- arrive ---
+
+// zmierza do celu i zwalnia w miarę zbliżania się
+sf::Vector2f SteeringBehaviours::arrive(const sf::Vector2f& targetPos, ArriveDeceleration deceleration) {
+    if (!parent)
+        return sf::Vector2f(0, 0);
+
+    sf::Vector2f toTarget = targetPos - parent->getPosition();
+    float dist = std::sqrt(toTarget.x * toTarget.x + toTarget.y * toTarget.y);
+
+    if (dist > 0) {
+        // prędkość potrzebną do osiągnięcia celu przy zadanym spowolnieniu; wartość z enum mnożona przez takie cosik, żeby dostosować do sensownych wartości
+        float speed = dist / (static_cast<float>(deceleration) * DECELERATION_TWEAK);
+
+        // prędkość nie przekracza max speed
+        speed = std::min(speed, MAX_ENEMY_SPEED);
+
+        // odtąd jak seek, ale bez normalizacji toTarget - bo mamy długość
+        sf::Vector2f desiredVelocity = toTarget * speed / dist;
+
+        return (desiredVelocity - parent->velocity);
+    }
+
+    return sf::Vector2f(0, 0);
+}
+
+// --- separation ---
+
+// trzyma bota z dala od innych botów (group behaviour)
+sf::Vector2f SteeringBehaviours::separation(const std::vector<std::unique_ptr<Enemy>>& neighbors) {
+    if (!parent)
+        return sf::Vector2f(0, 0);
+
+    sf::Vector2f steeringForce(0, 0);
+
+    for (const auto& neighbor : neighbors) {
+        // tylko otagowani sąsiedzi są brani pod uwagę
+        if (neighbor->isTagged()) {
+            sf::Vector2f toAgent = parent->getPosition() - neighbor->getPosition();
+            float length = std::sqrt(toAgent.x * toAgent.x + toAgent.y * toAgent.y);
+
+            if (length > 0)
+                steeringForce += (toAgent / length) / length;
+        }
+    }
+
+    return steeringForce;
+}
+
+// --- alignment ---
+
+// wyrównuje kierunek bota do kierunków sąsiednich botów (group behaviour)
+sf::Vector2f SteeringBehaviours::alignment(const std::vector<std::unique_ptr<Enemy>>& neighbors) {
+    if (!parent)
+        return sf::Vector2f(0, 0);
+
+    sf::Vector2f averageHeading(0, 0);
+    int neighborCount = 0;
+
+    for (const auto& neighbor : neighbors) {
+        if (neighbor->isTagged()) {
+            averageHeading += neighbor->heading;
+            ++neighborCount;
+        }
+    }
+
+    // jeśli sąsiedztwo zawiera jeden lub więcej botów, uśrednij ich wektory kierunku
+    if (neighborCount > 0) {
+        averageHeading /= static_cast<float>(neighborCount);
+        averageHeading -= parent->heading;
+    }
+
+    return averageHeading;
+}
+
+// --- cohesion ---
+
+// kieruje bota w stronę centrum masy grupy sąsiadów (group behaviour)
+sf::Vector2f SteeringBehaviours::cohesion(const std::vector<std::unique_ptr<Enemy>>& neighbors) {
+    if (!parent)
+        return sf::Vector2f(0, 0);
+
+    sf::Vector2f centerOfMass(0, 0);
+    sf::Vector2f steeringForce(0, 0);
+    int neighborCount = 0;
+
+    for (const auto& neighbor : neighbors) {
+        if (neighbor->isTagged()) {
+            centerOfMass += neighbor->getPosition();
+            ++neighborCount;
+        }
+    }
+
+    if (neighborCount > 0) {
+        // centrum masy to średnia z sumy pozycji
+        centerOfMass /= static_cast<float>(neighborCount);
+
+        // teraz seek w kierunku tej pozycji
+        sf::Vector2f desiredVel = normalizeVec2D(centerOfMass - parent->getPosition()) * MAX_ENEMY_SPEED;
+        steeringForce = desiredVel - parent->velocity;
+    }
+
+    return steeringForce;
 }

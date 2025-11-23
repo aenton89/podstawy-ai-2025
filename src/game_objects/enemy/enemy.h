@@ -17,11 +17,18 @@ public:
 	bool was_hit = false;
 	// komponent zachowań sterujących - do konstruktora przyjmuje this
 	SteeringBehaviours steering;
+	// dla zachowań grupowych
+	bool tagged = false;
 
 	Enemy(float _x, float _y, Player* _player);
 
 	void updateColliderPosition();
 	void steeringBehavior();
+
+	void tag();
+	void unTag();
+	const bool isTagged() const;
+
 
 	void update(float dt, sf::RenderWindow& window) override;
 };

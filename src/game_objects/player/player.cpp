@@ -11,6 +11,8 @@ Player::Player(float _speed, Game* _game): GameObject(0.f, 0.f, PLAYER_SIZE), sp
 	shape.setOrigin(shape.getRadius(), shape.getRadius());
 
 	game = _game;
+	velocity = sf::Vector2f(0.f, 0.f);
+	previousPosition = sf::Vector2f(0.f, 0.f);
 }
 
 void Player::handleInput(float deltaTime) {
@@ -48,10 +50,19 @@ void Player::updateColliderPosition() {
 	collider.position = { shape.getPosition().x, shape.getPosition().y };
 }
 
+void Player::updateVelocity(float deltaTime) {
+	if (deltaTime > 0.f) {
+		sf::Vector2f currentPosition = shape.getPosition();
+		velocity = (currentPosition - previousPosition) / deltaTime;
+		previousPosition = currentPosition;
+	}
+}
+
 void Player::update(float dt, sf::RenderWindow &window) {
 	handleInput(dt);
 	updateRotation(window);
 	updateColliderPosition();
+	updateVelocity(dt);
 }
 
 sf::Vector2f Player::getForwardDirection(sf::RenderWindow& window) const {

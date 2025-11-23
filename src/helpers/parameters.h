@@ -24,3 +24,11 @@
 #define WANDER_DISTANCE 50.f
 #define WANDER_JITTER 0.01f
 
+// pod flee
+#define PANIC_DISTANCE_SQ 500.f * 500.f
+
+// pod arrive
+#define DECELERATION_TWEAK 0.3f
+
+// pod zachowania grupowe
+#define NEIGHBOR_RADIUS 100.f

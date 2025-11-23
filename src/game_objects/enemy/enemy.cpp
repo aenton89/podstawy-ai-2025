@@ -37,3 +37,15 @@ void Enemy::update(float dt, sf::RenderWindow& window) {
 	shape.move(velocity*dt);
 	updateColliderPosition();
 }
+
+void Enemy::tag() {
+	tagged = true;
+}
+
+void Enemy::unTag() {
+	tagged = false;
+}
+
+const bool Enemy::isTagged() const {
+	return tagged;
+}
