@@ -1,6 +1,5 @@
 #include "enemy.h"
 #include "../../helpers/parameters.h"
-#include <iostream>
 
 
 
@@ -48,4 +47,35 @@ void Enemy::unTag() {
 
 const bool Enemy::isTagged() const {
 	return tagged;
+}
+
+void Enemy::setState(State _state) {
+	currentState = _state;
+	if (currentState == State::Hide_Explore)
+		shape.setFillColor(sf::Color::Green);
+	else
+		shape.setFillColor(sf::Color::Blue);
+}
+
+State Enemy::getState() const {
+	return currentState;
+}
+
+// metoda wykrywa pobliskich agentów w stanie Hide_Explore i wysyła ich listę do Game
+std::vector<Enemy*> Enemy::checkNeighborExploring(const std::vector<std::unique_ptr<Enemy>>& neighbors, float radius) {
+    std::vector<Enemy*> result;
+
+    for (auto& neighbor : neighbors) {
+        if(neighbor->getState() == State::Attack) continue;
+
+        sf::Vector2f to = neighbor->getPosition() - this->getPosition();
+        float distSq = to.x * to.x + to.y * to.y;
+
+        float range = radius + neighbor->collider.radius;
+
+        if (distSq < range * range)
+            result.push_back(neighbor.get());
+    }
+
+    return result;
 }

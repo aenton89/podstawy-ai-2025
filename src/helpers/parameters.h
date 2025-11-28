@@ -25,10 +25,29 @@
 #define WANDER_JITTER 0.01f
 
 // pod flee
-#define PANIC_DISTANCE_SQ 500.f * 500.f
+#define PANIC_DISTANCE_SQ 200.f * 200.f
 
 // pod arrive
 #define DECELERATION_TWEAK 0.3f
 
 // pod zachowania grupowe
 #define NEIGHBOR_RADIUS 100.f
+
+// wagi dla steering behaviours
+#define MULT_WALL_AVOIDANCE 1.0f
+#define MULT_OBSTACLE_AVOIDANCE 2.0f
+#define MULT_WANDER 1.0f
+#define MULT_HIDE 1.0f
+#define MULT_FLEE 1.0f
+#define MULT_SEPARATION 50.0f
+#define MULT_ALIGNMENT 5.0f
+#define MULT_COHESION 0.2f
+#define MULT_SEEK 1.0f
+
+// ilosc wrogów by przejść w tryb ATTACK
+#define ATTACK_THRESHOLD 4
+
+
+
+// pod metodę "Weighted Truncated Running Sum with Prioritization" - nieużyte na razie
+#define MAX_FORCE 80.f

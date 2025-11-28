@@ -12,11 +12,6 @@ class Obstacle;
 
 
 
-// TODO: do stanów
-enum State {
-	Hide_Explore,
-	Attack
-};
 
 // enum dla zwalniania przy arrive
 enum class ArriveDeceleration {
@@ -54,8 +49,6 @@ public:
 	// potrzebne pod wall avoidance
 	std::vector<sf::Vector2f> feelers;
 	sf::Vector2f wanderTarget;
-	// TODO: stany
-	State currentState;
 
 
 
@@ -72,7 +65,7 @@ public:
 	sf::Vector2f getHidingPosition(const sf::Vector2f& posOb, float radiusOb, const sf::Vector2f& posTarget);
 
 	// obliczaja kolejne siły wpływające na Enemy
-	sf::Vector2f seek();
+	sf::Vector2f seek(const sf::Vector2f& targetPos);
 	sf::Vector2f wander();
 	sf::Vector2f hide(const std::vector<std::unique_ptr<Obstacle>>& obstacles);
 	sf::Vector2f flee(const sf::Vector2f& targetPos);
@@ -85,10 +78,11 @@ public:
 	// unikanie przeszkód
 	sf::Vector2f wallAvoidance();
 	sf::Vector2f obstacleAvoidance(const std::vector<std::unique_ptr<Obstacle>>& obstacles, const std::vector<std::unique_ptr<Enemy>>& enemies);
-	// oblicza sume z wszystkich uwzględnianych wektorów TODO: tu wywolywać attack() i hide_explore() w zależności od stanu
+	// oblicza sume z wszystkich uwzględnianych wektorów
 	sf::Vector2f calculate();
-	// TODO: dodać attack() i hide_explore()
-	// sf::Vector2f attack();
-	// sf::Vector2f hide_explore();
-	// TODO: dodać funkcje do logiki przejść między stanami
+	// funkcje z wybranymi steering behaviours dla konkretnych stanów
+	sf::Vector2f attack();
+	sf::Vector2f hide_explore();
+
+	bool accumulateForce(sf::Vector2f& runningTot, sf::Vector2f forceToAdd);
 };

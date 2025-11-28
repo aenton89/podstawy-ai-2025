@@ -128,6 +128,24 @@ void Game::deleteDeadEnemies() {
 	);
 }
 
+// zmien stan wrogów na Attack
+void Game::updateAgentsState() {
+    for (auto& enemy : enemies) {
+        if (enemy->getState() == State::Attack) continue;
+
+		// lista wrogów w stanie Hide_Explore
+        auto nearbyHEList = enemy->checkNeighborExploring(enemies, 100.f);
+        if ((int)nearbyHEList.size() >= ATTACK_THRESHOLD)
+        {
+            for (Enemy* e : nearbyHEList)
+                e->setState(State::Attack);    
+
+            enemy->setState(State::Attack);
+        }
+    }
+
+}
+
 void Game::keepInsideWindow(GameObject& obj) {
 	float r = obj.collider.radius;
 	sf::Vector2f pos = obj.getPosition();
@@ -222,6 +240,7 @@ void Game::update(float deltaTime) {
 	// usuń + dodaj przeciwników, jeśli gracz ich zabije
 	deleteDeadEnemies();
 	spawnEnemies(MAX_ENEMIES_AMOUNT);
+	updateAgentsState();
 
 	// RAYCAST
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {

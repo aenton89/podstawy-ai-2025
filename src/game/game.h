@@ -29,6 +29,7 @@ private:
 	void initObstacles(int count);
 	void spawnEnemies(int max_amount);
 	void deleteDeadEnemies();
+	void updateAgentsState();
 	void keepInsideWindow(GameObject& obj);
 	void gameOver();
 

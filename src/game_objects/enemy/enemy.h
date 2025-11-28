@@ -4,6 +4,11 @@
 #include "../player/player.h"
 
 
+// TODO: do stanów
+enum State {
+	Hide_Explore,
+	Attack
+};
 
 class Enemy : public GameObject {
 public:
@@ -19,6 +24,8 @@ public:
 	SteeringBehaviours steering;
 	// dla zachowań grupowych
 	bool tagged = false;
+	// TODO: stany
+	State currentState = State::Hide_Explore;
 
 	Enemy(float _x, float _y, Player* _player);
 
@@ -28,6 +35,10 @@ public:
 	void tag();
 	void unTag();
 	const bool isTagged() const;
+
+	void setState(State state);
+	State getState() const;
+	std::vector<Enemy*> checkNeighborExploring(const std::vector<std::unique_ptr<Enemy>>& neighbors, float radius);
 
 
 	void update(float dt, sf::RenderWindow& window) override;

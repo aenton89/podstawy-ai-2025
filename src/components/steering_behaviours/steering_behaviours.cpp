@@ -3,7 +3,7 @@
 #include "../../game_objects/enemy/enemy.h"
 #include "../../game_objects/obstacle/obstacle.h"
 #include "../../helpers/parameters.h"
-
+#include <iostream>
 
 
 SteeringBehaviours::SteeringBehaviours() {
@@ -22,13 +22,89 @@ sf::Vector2f SteeringBehaviours::calculate() {
     // tegowanie pod zachowania grupowe
     TagNeighbors(parent, parent->player->game->enemies, NEIGHBOR_RADIUS);
 
-	return cohesion(parent->player->game->enemies) + obstacleAvoidance(parent->player->game->obstacles, parent->player->game->enemies) + wallAvoidance();
+    sf::Vector2f steeringForce = sf::Vector2f(0, 0);
+
+    // -- alternatywna metoda "Weighted Truncated Running Sum with Prioritization" z prioretyzacją konkretnych steering forces --
+    
+    // sf::Vector2f force;
+    // if (parent->getState() == State::Hide_Explore) {
+    //     force = wallAvoidance() * 1.0f;
+    //     if (!accumulateForce(steeringForce, force)) return steeringForce;
+    //     force = obstacleAvoidance(parent->player->game->obstacles, parent->player->game->enemies) * 1.0f;
+    //     if (!accumulateForce(steeringForce, force)) return steeringForce;
+    //     force = flee(parent->player->getPosition()) * 1.0f;
+    //     if (!accumulateForce(steeringForce, force)) return steeringForce;
+    //     force = wander() * 1.0f;
+    //     if (!accumulateForce(steeringForce, force)) return steeringForce;
+    //     force = hide(parent->player->game->obstacles) * 2.0f;
+    //     if (!accumulateForce(steeringForce, force)) return steeringForce;
+    // }
+    // else {
+    //     force = wallAvoidance() * 1.0f;
+    //     if (!accumulateForce(steeringForce, force)) return steeringForce;
+    //     force = obstacleAvoidance(parent->player->game->obstacles, parent->player->game->enemies) * 1.0f;
+    //     if (!accumulateForce(steeringForce, force)) return steeringForce;
+    //     force = separation(parent->player->game->enemies) * 1.0f;
+    //     if (!accumulateForce(steeringForce, force)) return steeringForce;
+    //     force = seek(parent->player->getPosition()) * 1.0f;
+    //     if (!accumulateForce(steeringForce, force)) return steeringForce;
+    //     force = alignment(parent->player->game->enemies) * 1.0f;
+    //     if (!accumulateForce(steeringForce, force)) return steeringForce;
+    //     force = cohesion(parent->player->game->enemies) * 1.0f;
+    //     if (!accumulateForce(steeringForce, force)) return steeringForce;
+    //     }
+    // }
+    // force = evade() * 0.0f;
+    // if (!accumulateForce(steeringForce, force)) return steeringForce;
+    //  
+    // return steeringForce;
+
+    if (parent->getState() == State::Hide_Explore)
+        steeringForce = hide_explore();
+    else
+        steeringForce = attack();
+    return steeringForce;
+}
+
+// zestaw sił wyliczanych w trybie Hide_Explore
+sf::Vector2f SteeringBehaviours::hide_explore() {
+    sf::Vector2f forceSum = sf::Vector2f(0, 0);
+    forceSum += wallAvoidance() * MULT_WALL_AVOIDANCE;
+    forceSum += obstacleAvoidance(parent->player->game->obstacles, parent->player->game->enemies) * MULT_OBSTACLE_AVOIDANCE;
+    forceSum += wander() * MULT_WANDER;
+    forceSum += hide(parent->player->game->obstacles) * MULT_HIDE;
+    forceSum += flee(parent->player->getPosition()) * MULT_FLEE;
+    forceSum += separation(parent->player->game->enemies) * MULT_SEPARATION;
+    forceSum += alignment(parent->player->game->enemies) * MULT_ALIGNMENT;
+    forceSum += cohesion(parent->player->game->enemies) * MULT_COHESION;
+    // forceSum += arrive(parent->player->getPosition(), ArriveDeceleration::normal) * 1.0f;
+    return forceSum;
+}
+// i trybie Attack
+sf::Vector2f SteeringBehaviours::attack() {
+    sf::Vector2f forceSum = sf::Vector2f(0, 0);
+    forceSum += wallAvoidance() * MULT_WALL_AVOIDANCE;
+    forceSum += obstacleAvoidance(parent->player->game->obstacles, parent->player->game->enemies) * MULT_OBSTACLE_AVOIDANCE;
+    forceSum += seek(parent->player->getPosition()) * MULT_SEEK;
+    return forceSum;
+}
+
+// pod kalkulację steering force z prioretyzacją
+bool SteeringBehaviours::accumulateForce(sf::Vector2f& runningTot, sf::Vector2f forceToAdd) {
+    double magnitudeSoFar = std::sqrt(runningTot.x * runningTot.x + runningTot.y * runningTot.y);
+    double magnitudeRemaining = MAX_FORCE - magnitudeSoFar;
+    if (magnitudeRemaining <= 0.0) return false;
+
+    double magnitudeToAdd = std::sqrt(forceToAdd.x * forceToAdd.x + forceToAdd.y * forceToAdd.y);
+    if (magnitudeToAdd < magnitudeRemaining) {runningTot += forceToAdd;}
+    else {runningTot += (normalizeVec2D(forceToAdd) * (float)magnitudeRemaining);}
+    return true;
 }
 
 // --- seek ---
 
-sf::Vector2f SteeringBehaviours::seek() {
-	sf::Vector2f desired_vel = normalizeVec2D(parent->player->getPosition() - parent->getPosition()) * MAX_ENEMY_SPEED;
+sf::Vector2f SteeringBehaviours::seek(const sf::Vector2f& targetPos) {
+	sf::Vector2f desired_vel = normalizeVec2D(targetPos - parent->getPosition()) * MAX_ENEMY_SPEED;
 	return (desired_vel - parent->velocity);
 }
 
@@ -41,9 +117,6 @@ sf::Vector2f SteeringBehaviours::wander() {
 
     sf::Vector2f targetLocal = wanderTarget + sf::Vector2f(WANDER_DISTANCE, 0.f);
     sf::Vector2f targetWorld = pointToWorldSpace(targetLocal, parent->heading, parent->side, parent->getPosition());
-
-    // DEBUG:
-    // std::cout << (targetWorld - parent->getPosition()).x << " | " << (targetWorld - parent->getPosition()).y << "\n";
 
     return targetWorld - parent->getPosition();
 }
@@ -278,16 +351,13 @@ sf::Vector2f SteeringBehaviours::hide(const std::vector<std::unique_ptr<Obstacle
         }
     }
 
-    // TODO: później zamienić seek na arrive? (czyli tego co jest użyte do dotarcia do punktu ukrycia)
     // jeśli znaleziono punkt ukrycia, użyj arrive do dotarcia tam
     if (distToClosest != std::numeric_limits<float>::max()) {
-        sf::Vector2f desiredVel = normalizeVec2D(bestHidingSpot - parent->getPosition()) * MAX_ENEMY_SPEED;
-        return desiredVel - parent->velocity;
+        return arrive(bestHidingSpot, ArriveDeceleration::normal);
     }
 
     // jeśli nie ma przeszkód, po prostu uciekaj od gracza (evade)
-    sf::Vector2f desiredVel = normalizeVec2D(parent->getPosition() - parent->player->getPosition()) * MAX_ENEMY_SPEED;
-    return desiredVel - parent->velocity;
+    return evade();
 }
 
 // funkcja pomocnicza - blicza pozycję ukrycia za przeszkodą
@@ -438,8 +508,7 @@ sf::Vector2f SteeringBehaviours::cohesion(const std::vector<std::unique_ptr<Enem
         centerOfMass /= static_cast<float>(neighborCount);
 
         // teraz seek w kierunku tej pozycji
-        sf::Vector2f desiredVel = normalizeVec2D(centerOfMass - parent->getPosition()) * MAX_ENEMY_SPEED;
-        steeringForce = desiredVel - parent->velocity;
+        steeringForce = seek(centerOfMass);
     }
 
     return steeringForce;
