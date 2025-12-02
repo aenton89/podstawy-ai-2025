@@ -1,23 +1,20 @@
 #include "game.h"
 #include "../helpers/parameters.h"
-#include <cstdlib>
-#include <ctime>
 #include <iostream>
+#include <SFML/Graphics.hpp>
 
 
 
-Game::Game(): window(sf::VideoMode(1600, 900), "ASSIGNMENT 1: zombie game"), player(PLAYER_SPEED, this) {
+Game::Game(): window(sf::VideoMode(1600, 900), "ASSIGNMENT 1: zombie game"), gen(std::random_device{}()), player(PLAYER_SPEED, this) {
 	sf::Vector2u winSize = window.getSize();
 	player.setPosition({ winSize.x / 2.f, winSize.y / 2.f });
 
-	std::srand(static_cast<unsigned>(std::time(nullptr)));
 	initObstacles(MAX_OBSTACLES_AMOUNT);
 	spawnEnemies(MAX_ENEMIES_AMOUNT);
 }
 
 void Game::initObstacles(int count) {
 	sf::Vector2u winSize = window.getSize();
-	std::srand(static_cast<unsigned>(std::time(nullptr)));
 
 	for (int i = 0; i < count; ++i) {
 		bool placed = false;
@@ -25,9 +22,13 @@ void Game::initObstacles(int count) {
 
 		// max 10 prób na każdą przeszkodę
 		while (!placed && attempts < 10) {
-			float x = static_cast<float>(std::rand() % winSize.x);
-			float y = static_cast<float>(std::rand() % winSize.y);
-			float r = MIN_OBSTACLE_SIZE + static_cast<float>(std::rand() % static_cast<int>(MAX_OBSTACLE_SIZE - MIN_OBSTACLE_SIZE));
+			// generowanie losowej pozycji i rozmiaru
+			std::uniform_real_distribution<float> distX(0.f, static_cast<float>(winSize.x));
+			std::uniform_real_distribution<float> distY(0.f, static_cast<float>(winSize.y));
+			std::uniform_real_distribution<float> distR(MIN_OBSTACLE_SIZE, MAX_OBSTACLE_SIZE);
+			auto x = distX(gen);
+			auto y = distY(gen);
+			float r = distR(gen);
 
 			Obstacle newObstacle(x, y, r);
 
@@ -63,25 +64,32 @@ void Game::spawnEnemies(int max_amount) {
     sf::Vector2u winSize = window.getSize();
 
     while (enemies.size() < max_amount) {
-        int edge = std::rand() % 4;
+    	std::uniform_int_distribution<int> distEdge(0, 3);
+    	int edge = distEdge(gen);
+
         float x = 0.f, y = 0.f;
+
+    	std::uniform_real_distribution<float> distOffset(MIN_ENEMY_EDGE_DIST,MAX_ENEMY_EDGE_DIST);
+
+    	std::uniform_real_distribution<float> distScreenX(0.f, static_cast<float>(winSize.x));
+    	std::uniform_real_distribution<float> distScreenY(0.f, static_cast<float>(winSize.y));
 
         switch (edge) {
             case 0:
-                x = MIN_ENEMY_EDGE_DIST + static_cast<float>(std::rand()) / RAND_MAX * (MAX_ENEMY_EDGE_DIST - MIN_ENEMY_EDGE_DIST);
-                y = static_cast<float>(std::rand() % winSize.y);
+        		x = distOffset(gen);
+        		y = distScreenY(gen);
                 break;
             case 1:
-                x = winSize.x - (MIN_ENEMY_EDGE_DIST + static_cast<float>(std::rand()) / RAND_MAX * (MAX_ENEMY_EDGE_DIST - MIN_ENEMY_EDGE_DIST));
-                y = static_cast<float>(std::rand() % winSize.y);
+        		x = winSize.x - distOffset(gen);
+        		y = distScreenY(gen);
                 break;
             case 2:
-                x = static_cast<float>(std::rand() % winSize.x);
-                y = MIN_ENEMY_EDGE_DIST + static_cast<float>(std::rand()) / RAND_MAX * (MAX_ENEMY_EDGE_DIST - MIN_ENEMY_EDGE_DIST);
+        		x = distScreenX(gen);
+        		y = distOffset(gen);
                 break;
             case 3:
-                x = static_cast<float>(std::rand() % winSize.x);
-                y = winSize.y - (MIN_ENEMY_EDGE_DIST + static_cast<float>(std::rand()) / RAND_MAX * (MAX_ENEMY_EDGE_DIST - MIN_ENEMY_EDGE_DIST));
+        		x = distScreenX(gen);
+        		y = winSize.y - distOffset(gen);
                 break;
         }
 
@@ -119,24 +127,21 @@ void Game::spawnEnemies(int max_amount) {
 
 
 void Game::deleteDeadEnemies() {
-	enemies.erase(
-		std::remove_if(enemies.begin(), enemies.end(),
-			[](const std::unique_ptr<Enemy>& e) {
-				return e->was_hit;
-			}),
-		enemies.end()
-	);
+	std::erase_if(enemies, [](const std::unique_ptr<Enemy>& e) {
+		return e->was_hit;
+	});
 }
 
+// TODO: idk czy nie trzeba dodać analogicznego, żeby wracał też do Hide_Explore
 // zmien stan wrogów na Attack
-void Game::updateAgentsState() {
+void Game::updateAgentsState() const {
     for (auto& enemy : enemies) {
-        if (enemy->getState() == State::Attack) continue;
+        if (enemy->getState() == State::Attack)
+        	continue;
 
 		// lista wrogów w stanie Hide_Explore
         auto nearbyHEList = enemy->checkNeighborExploring(enemies, 100.f);
-        if ((int)nearbyHEList.size() >= ATTACK_THRESHOLD)
-        {
+        if (static_cast<int>(nearbyHEList.size()) >= ATTACK_THRESHOLD) {
             for (Enemy* e : nearbyHEList)
                 e->setState(State::Attack);    
 
@@ -146,7 +151,7 @@ void Game::updateAgentsState() {
 
 }
 
-void Game::keepInsideWindow(GameObject& obj) {
+void Game::keepInsideWindow(GameObject& obj) const {
 	float r = obj.collider.radius;
 	sf::Vector2f pos = obj.getPosition();
 
@@ -173,7 +178,7 @@ void Game::run() {
 }
 
 void Game::processEvents() {
-	sf::Event event;
+	sf::Event event{};
 	while (window.pollEvent(event)) {
 		if (event.type == sf::Event::Closed)
 			window.close();
@@ -295,7 +300,7 @@ void Game::gameOver() {
 	window.close();
 }
 
-void Game::debug() {
+void Game::debug() const {
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt)) {
 		std::cout<< "dt: " << clock.getElapsedTime().asSeconds() << "\n";
 		std::cout<< "player pos: " << player.getPosition().x << ", " << player.getPosition().y << "\n";

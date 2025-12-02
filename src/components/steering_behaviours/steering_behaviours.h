@@ -1,15 +1,12 @@
 #pragma once
-#include <cmath>
 #include <memory>
 #include <vector>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Vector2.hpp>
-#include "../../helpers/helper_methods.h"
 
 class GameObject;
 class Enemy;
 class Obstacle;
-
 
 
 
@@ -22,7 +19,7 @@ enum class ArriveDeceleration {
 
 // funkcja pomocnicza do tagowania sąsiadów w promieniu
 template<class T, class conT>
-void TagNeighbors(const T* entity, conT& containerOfEntities, double radius) {
+void tagNeighbors(const T* entity, conT& containerOfEntities, double radius) {
 	// pętla przez wszystkie encje sprawdzając zasięg
 	for (auto& curEntity : containerOfEntities) {
 		// najpierw wyczyść obecny tag
@@ -58,31 +55,31 @@ public:
 	// funkcja tworząca feelery do wall avoidance
 	void createFeelers();
 	// znajduje najbliższy obiekt na kolizji i zwraca wyniki przez referencje
-	void findIntersections(const std::vector<GameObject*>& objects, GameObject*& closestObject, double& distToClosestIP, sf::Vector2f& localPosOfClosest, float& dBoxLength, sf::Vector2f& heading, sf::Vector2f& side);
+	void findIntersections(const std::vector<GameObject*>& objects, GameObject*& closestObject, double& distToClosestIP, sf::Vector2f& localPosOfClosest, float& dBoxLength, sf::Vector2f& heading, sf::Vector2f& side) const;
 	// DEBUG: wizualizacja detection box i przecięć do obstacle avoidance
-	void debugDrawIntersections(sf::RenderWindow& window, const sf::Vector2f& heading, float dBoxLength, GameObject* closestObstacle, double distToClosestIP);
+	void debugDrawIntersections(sf::RenderWindow& window, const sf::Vector2f& heading, float dBoxLength, GameObject* closestObstacle, double distToClosestIP) const;
 	// pomocnicza funkcja do hide - oblicza pozycję ukrycia za przeszkodą
-	sf::Vector2f getHidingPosition(const sf::Vector2f& posOb, float radiusOb, const sf::Vector2f& posTarget);
+	static sf::Vector2f getHidingPosition(const sf::Vector2f& posOb, float radiusOb, const sf::Vector2f& posTarget);
 
 	// obliczaja kolejne siły wpływające na Enemy
-	sf::Vector2f seek(const sf::Vector2f& targetPos);
+	sf::Vector2f seek(const sf::Vector2f& targetPos) const;
 	sf::Vector2f wander();
-	sf::Vector2f hide(const std::vector<std::unique_ptr<Obstacle>>& obstacles);
-	sf::Vector2f flee(const sf::Vector2f& targetPos);
-	sf::Vector2f evade();
-	sf::Vector2f arrive(const sf::Vector2f& targetPos, ArriveDeceleration deceleration);
+	sf::Vector2f hide(const std::vector<std::unique_ptr<Obstacle>>& obstacles) const;
+	sf::Vector2f flee(const sf::Vector2f& targetPos) const;
+	sf::Vector2f evade() const;
+	sf::Vector2f arrive(const sf::Vector2f& targetPos, ArriveDeceleration deceleration) const;
 	// zachowania grupowe
-	sf::Vector2f separation(const std::vector<std::unique_ptr<Enemy>>& neighbors);
-	sf::Vector2f alignment(const std::vector<std::unique_ptr<Enemy>>& neighbors);
-	sf::Vector2f cohesion(const std::vector<std::unique_ptr<Enemy>>& neighbors);
+	sf::Vector2f separation(const std::vector<std::unique_ptr<Enemy>>& neighbors) const;
+	sf::Vector2f alignment(const std::vector<std::unique_ptr<Enemy>>& neighbors) const;
+	sf::Vector2f cohesion(const std::vector<std::unique_ptr<Enemy>>& neighbors) const;
 	// unikanie przeszkód
 	sf::Vector2f wallAvoidance();
-	sf::Vector2f obstacleAvoidance(const std::vector<std::unique_ptr<Obstacle>>& obstacles, const std::vector<std::unique_ptr<Enemy>>& enemies);
+	sf::Vector2f obstacleAvoidance(const std::vector<std::unique_ptr<Obstacle>>& obstacles, const std::vector<std::unique_ptr<Enemy>>& enemies) const;
 	// oblicza sume z wszystkich uwzględnianych wektorów
 	sf::Vector2f calculate();
 	// funkcje z wybranymi steering behaviours dla konkretnych stanów
 	sf::Vector2f attack();
 	sf::Vector2f hide_explore();
 
-	bool accumulateForce(sf::Vector2f& runningTot, sf::Vector2f forceToAdd);
+	static bool accumulateForce(sf::Vector2f& runningTot, sf::Vector2f forceToAdd);
 };

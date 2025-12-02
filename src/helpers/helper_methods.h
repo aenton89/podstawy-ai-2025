@@ -19,7 +19,7 @@ inline sf::Vector2f normalizeVec2D(const sf::Vector2f& v) {
 	float len = std::sqrt(v.x * v.x + v.y * v.y);
 	if (len != 0)
 		return v / len;
-	return sf::Vector2f(0.f, 0.f);
+	return {0.f, 0.f};
 }
 
 // przekształca punkt do lokalnej przestrzeni współrzędnych
@@ -29,14 +29,14 @@ inline sf::Vector2f pointToLocalSpace(const sf::Vector2f& point, const sf::Vecto
 	float localX = transPoint.x * heading.x + transPoint.y * heading.y;
 	float localY = transPoint.x * side.x + transPoint.y * side.y;
 
-	return sf::Vector2f(localX, localY);
+	return {localX, localY};
 }
 
 inline sf::Vector2f vectorToWorldSpace(const sf::Vector2f& vec, const sf::Vector2f& heading, const sf::Vector2f& side) {
-	return sf::Vector2f(
-		heading.x * vec.x + side.x * vec.y,
-		heading.y * vec.x + side.y * vec.y
-	);
+	return {
+	heading.x * vec.x + side.x * vec.y,
+	heading.y * vec.x + side.y * vec.y
+	};
 }
 
 // f.pom. konwersja wektora lokalnego na globalny

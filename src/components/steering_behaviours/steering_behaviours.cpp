@@ -3,7 +3,9 @@
 #include "../../game_objects/enemy/enemy.h"
 #include "../../game_objects/obstacle/obstacle.h"
 #include "../../helpers/parameters.h"
-#include <iostream>
+#include "../../helpers/helper_methods.h"
+#include <cmath>
+
 
 
 SteeringBehaviours::SteeringBehaviours() {
@@ -17,12 +19,12 @@ void SteeringBehaviours::setParent(Enemy *_parent) {
 
 sf::Vector2f SteeringBehaviours::calculate() {
 	if (!parent)
-		return sf::Vector2f(0, 0);
+		return {0, 0};
 
     // tegowanie pod zachowania grupowe
-    TagNeighbors(parent, parent->player->game->enemies, NEIGHBOR_RADIUS);
+    tagNeighbors(parent, parent->player->game->enemies, NEIGHBOR_RADIUS);
 
-    sf::Vector2f steeringForce = sf::Vector2f(0, 0);
+    auto steeringForce = sf::Vector2f(0, 0);
 
     // -- alternatywna metoda "Weighted Truncated Running Sum with Prioritization" z prioretyzacją konkretnych steering forces --
     
@@ -93,17 +95,20 @@ sf::Vector2f SteeringBehaviours::attack() {
 bool SteeringBehaviours::accumulateForce(sf::Vector2f& runningTot, sf::Vector2f forceToAdd) {
     double magnitudeSoFar = std::sqrt(runningTot.x * runningTot.x + runningTot.y * runningTot.y);
     double magnitudeRemaining = MAX_FORCE - magnitudeSoFar;
-    if (magnitudeRemaining <= 0.0) return false;
+    if (magnitudeRemaining <= 0.0)
+        return false;
 
     double magnitudeToAdd = std::sqrt(forceToAdd.x * forceToAdd.x + forceToAdd.y * forceToAdd.y);
-    if (magnitudeToAdd < magnitudeRemaining) {runningTot += forceToAdd;}
-    else {runningTot += (normalizeVec2D(forceToAdd) * (float)magnitudeRemaining);}
+    if (magnitudeToAdd < magnitudeRemaining)
+        runningTot += forceToAdd;
+    else
+        runningTot += (normalizeVec2D(forceToAdd) * static_cast<float>(magnitudeRemaining));
     return true;
 }
 
 // --- seek ---
 
-sf::Vector2f SteeringBehaviours::seek(const sf::Vector2f& targetPos) {
+sf::Vector2f SteeringBehaviours::seek(const sf::Vector2f& targetPos) const {
 	sf::Vector2f desired_vel = normalizeVec2D(targetPos - parent->getPosition()) * MAX_ENEMY_SPEED;
 	return (desired_vel - parent->velocity);
 }
@@ -174,9 +179,9 @@ void SteeringBehaviours::createFeelers(){
 
 // --- obstacle avoidance ---
 
-sf::Vector2f SteeringBehaviours::obstacleAvoidance(const std::vector<std::unique_ptr<Obstacle>>& obstacles, const std::vector<std::unique_ptr<Enemy>>& enemies) {
+sf::Vector2f SteeringBehaviours::obstacleAvoidance(const std::vector<std::unique_ptr<Obstacle>>& obstacles, const std::vector<std::unique_ptr<Enemy>>& enemies) const {
     if (!parent)
-        return sf::Vector2f(0, 0);
+        return {0, 0};
 
     // przygotuj wektor wszystkich obiektów do sprawdzenia
     std::vector<GameObject*> allObjects;
@@ -221,7 +226,7 @@ sf::Vector2f SteeringBehaviours::obstacleAvoidance(const std::vector<std::unique
     return steeringForce;
 }
 
-void SteeringBehaviours::findIntersections(const std::vector<GameObject*>& objects, GameObject*& closestObject, double& distToClosestIP, sf::Vector2f& localPosOfClosest, float& dBoxLength, sf::Vector2f& heading, sf::Vector2f& side) {
+void SteeringBehaviours::findIntersections(const std::vector<GameObject*>& objects, GameObject*& closestObject, double& distToClosestIP, sf::Vector2f& localPosOfClosest, float& dBoxLength, sf::Vector2f& heading, sf::Vector2f& side) const {
     if (!parent)
         return;
 
@@ -278,7 +283,7 @@ void SteeringBehaviours::findIntersections(const std::vector<GameObject*>& objec
 }
 
 // TODO: do debugowania dla obstacle avoidance
-void SteeringBehaviours::debugDrawIntersections(sf::RenderWindow& window, const sf::Vector2f& heading, float dBoxLength, GameObject* closestObstacle, double distToClosestIP) {
+void SteeringBehaviours::debugDrawIntersections(sf::RenderWindow& window, const sf::Vector2f& heading, float dBoxLength, GameObject* closestObstacle, double distToClosestIP) const {
     if (!parent)
         return;
 
@@ -326,9 +331,9 @@ void SteeringBehaviours::debugDrawIntersections(sf::RenderWindow& window, const 
 // --- hide ---
 
 // znajduje najlepszą przeszkodę do ukrycia się przed graczem
-sf::Vector2f SteeringBehaviours::hide(const std::vector<std::unique_ptr<Obstacle>>& obstacles) {
+sf::Vector2f SteeringBehaviours::hide(const std::vector<std::unique_ptr<Obstacle>>& obstacles) const {
     if (!parent || !parent->player)
-        return sf::Vector2f(0, 0);
+        return {0, 0};
 
     float distToClosest = std::numeric_limits<float>::max();
     sf::Vector2f bestHidingSpot;
@@ -352,9 +357,8 @@ sf::Vector2f SteeringBehaviours::hide(const std::vector<std::unique_ptr<Obstacle
     }
 
     // jeśli znaleziono punkt ukrycia, użyj arrive do dotarcia tam
-    if (distToClosest != std::numeric_limits<float>::max()) {
+    if (distToClosest != std::numeric_limits<float>::max())
         return arrive(bestHidingSpot, ArriveDeceleration::normal);
-    }
 
     // jeśli nie ma przeszkód, po prostu uciekaj od gracza (evade)
     return evade();
@@ -376,15 +380,15 @@ sf::Vector2f SteeringBehaviours::getHidingPosition(const sf::Vector2f& posOb, fl
 // --- flee ---
 
 // ucieka od zadanej pozycji + tylko w zasięgu panic distance
-sf::Vector2f SteeringBehaviours::flee(const sf::Vector2f& targetPos) {
+sf::Vector2f SteeringBehaviours::flee(const sf::Vector2f& targetPos) const {
     if (!parent)
-        return sf::Vector2f(0, 0);
+        return {0, 0};
 
     float distSq = (parent->getPosition().x - targetPos.x) * (parent->getPosition().x - targetPos.x) +
                    (parent->getPosition().y - targetPos.y) * (parent->getPosition().y - targetPos.y);
 
     if (distSq > PANIC_DISTANCE_SQ)
-        return sf::Vector2f(0, 0);
+        return {0, 0};
 
     sf::Vector2f desired_vel = normalizeVec2D(parent->getPosition() - targetPos) * MAX_ENEMY_SPEED;
     return (desired_vel - parent->velocity);
@@ -393,9 +397,9 @@ sf::Vector2f SteeringBehaviours::flee(const sf::Vector2f& targetPos) {
 // --- evade ---
 
 // ucieka od gracza przewidując jego przyszłą pozycję
-sf::Vector2f SteeringBehaviours::evade() {
+sf::Vector2f SteeringBehaviours::evade() const {
     if (!parent || !parent->player)
-        return sf::Vector2f(0, 0);
+        return {0, 0};
 
     sf::Vector2f toPursuer = parent->player->getPosition() - parent->getPosition();
 
@@ -413,9 +417,9 @@ sf::Vector2f SteeringBehaviours::evade() {
 // --- arrive ---
 
 // zmierza do celu i zwalnia w miarę zbliżania się
-sf::Vector2f SteeringBehaviours::arrive(const sf::Vector2f& targetPos, ArriveDeceleration deceleration) {
+sf::Vector2f SteeringBehaviours::arrive(const sf::Vector2f& targetPos, ArriveDeceleration deceleration) const {
     if (!parent)
-        return sf::Vector2f(0, 0);
+        return {0, 0};
 
     sf::Vector2f toTarget = targetPos - parent->getPosition();
     float dist = std::sqrt(toTarget.x * toTarget.x + toTarget.y * toTarget.y);
@@ -433,15 +437,15 @@ sf::Vector2f SteeringBehaviours::arrive(const sf::Vector2f& targetPos, ArriveDec
         return (desiredVelocity - parent->velocity);
     }
 
-    return sf::Vector2f(0, 0);
+    return {0, 0};
 }
 
 // --- separation ---
 
 // trzyma bota z dala od innych botów (group behaviour)
-sf::Vector2f SteeringBehaviours::separation(const std::vector<std::unique_ptr<Enemy>>& neighbors) {
+sf::Vector2f SteeringBehaviours::separation(const std::vector<std::unique_ptr<Enemy>>& neighbors) const {
     if (!parent)
-        return sf::Vector2f(0, 0);
+        return {0, 0};
 
     sf::Vector2f steeringForce(0, 0);
 
@@ -462,9 +466,9 @@ sf::Vector2f SteeringBehaviours::separation(const std::vector<std::unique_ptr<En
 // --- alignment ---
 
 // wyrównuje kierunek bota do kierunków sąsiednich botów (group behaviour)
-sf::Vector2f SteeringBehaviours::alignment(const std::vector<std::unique_ptr<Enemy>>& neighbors) {
+sf::Vector2f SteeringBehaviours::alignment(const std::vector<std::unique_ptr<Enemy>>& neighbors) const {
     if (!parent)
-        return sf::Vector2f(0, 0);
+        return {0, 0};
 
     sf::Vector2f averageHeading(0, 0);
     int neighborCount = 0;
@@ -488,9 +492,9 @@ sf::Vector2f SteeringBehaviours::alignment(const std::vector<std::unique_ptr<Ene
 // --- cohesion ---
 
 // kieruje bota w stronę centrum masy grupy sąsiadów (group behaviour)
-sf::Vector2f SteeringBehaviours::cohesion(const std::vector<std::unique_ptr<Enemy>>& neighbors) {
+sf::Vector2f SteeringBehaviours::cohesion(const std::vector<std::unique_ptr<Enemy>>& neighbors) const {
     if (!parent)
-        return sf::Vector2f(0, 0);
+        return {0, 0};
 
     sf::Vector2f centerOfMass(0, 0);
     sf::Vector2f steeringForce(0, 0);

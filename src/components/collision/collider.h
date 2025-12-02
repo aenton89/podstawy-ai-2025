@@ -1,7 +1,5 @@
 #pragma once
-#include <cmath>
 #include <SFML/System/Vector2.hpp>
-#include "../../helpers/helper_methods.h"
 
 
 
@@ -10,7 +8,8 @@ public:
 	sf::Vector2f position;
 	float radius;
 
-	Collider(float _x = 0, float _y = 0, float _r = 10);
+	explicit Collider(float _x = 0, float _y = 0, float _r = 10);
 
+	[[nodiscard]]
 	bool checkCollision(const Collider& other) const;
 };

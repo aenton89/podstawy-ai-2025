@@ -7,7 +7,7 @@
 // na długość wektora prędkości
 #define MAX_ENEMY_SPEED 50.f
 
-#define MAX_ENEMIES_AMOUNT 10
+#define MAX_ENEMIES_AMOUNT 40
 #define MIN_ENEMY_EDGE_DIST 20.f
 #define MAX_ENEMY_EDGE_DIST 100.f
 
@@ -25,7 +25,7 @@
 #define WANDER_JITTER 0.01f
 
 // pod flee
-#define PANIC_DISTANCE_SQ 200.f * 200.f
+#define PANIC_DISTANCE_SQ (200.f * 200.f)
 
 // pod arrive
 #define DECELERATION_TWEAK 0.3f
@@ -46,8 +46,6 @@
 
 // ilosc wrogów by przejść w tryb ATTACK
 #define ATTACK_THRESHOLD 4
-
-
 
 // pod metodę "Weighted Truncated Running Sum with Prioritization" - nieużyte na razie
 #define MAX_FORCE 80.f

@@ -13,6 +13,6 @@ sf::Vector2f GameObject::getPosition() const {
 	return {collider.position.x, collider.position.y};
 }
 
-void GameObject::draw(sf::RenderWindow& window) {
+void GameObject::draw(sf::RenderWindow& window) const {
 	window.draw(shape);
 }

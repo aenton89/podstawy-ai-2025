@@ -24,7 +24,7 @@ std::optional<HitInfo> rayCircleIntersect(const sf::Vector2f& origin, const sf::
 
 Raycast::Raycast(): line(sf::Lines, 2), active(false) {}
 
-void Raycast::shoot(const sf::Vector2f& origin, const sf::Vector2f& direction, const std::vector<std::unique_ptr<Obstacle>>& obstacles, std::vector<std::unique_ptr<Enemy>>& enemies) {
+void Raycast::shoot(const sf::Vector2f& origin, const sf::Vector2f& direction, const std::vector<std::unique_ptr<Obstacle>>& obstacles, const std::vector<std::unique_ptr<Enemy>>& enemies) {
 	// domyślnie bardzo daleko
 	sf::Vector2f endPoint = origin + direction * 10000.f;
 	float minDist = 10000.f;
@@ -57,7 +57,7 @@ void Raycast::shoot(const sf::Vector2f& origin, const sf::Vector2f& direction, c
 	active = true;
 }
 
-void Raycast::draw(sf::RenderWindow& window) {
+void Raycast::draw(sf::RenderWindow& window) const {
 	if (active)
 		window.draw(line);
 }

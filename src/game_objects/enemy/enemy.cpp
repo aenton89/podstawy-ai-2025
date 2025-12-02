@@ -1,5 +1,6 @@
 #include "enemy.h"
 #include "../../helpers/parameters.h"
+#include "../../helpers/helper_methods.h"
 
 
 
@@ -45,7 +46,7 @@ void Enemy::unTag() {
 	tagged = false;
 }
 
-const bool Enemy::isTagged() const {
+bool Enemy::isTagged() const {
 	return tagged;
 }
 
@@ -62,7 +63,7 @@ State Enemy::getState() const {
 }
 
 // metoda wykrywa pobliskich agentów w stanie Hide_Explore i wysyła ich listę do Game
-std::vector<Enemy*> Enemy::checkNeighborExploring(const std::vector<std::unique_ptr<Enemy>>& neighbors, float radius) {
+std::vector<Enemy*> Enemy::checkNeighborExploring(const std::vector<std::unique_ptr<Enemy>>& neighbors, float radius) const {
     std::vector<Enemy*> result;
 
     for (auto& neighbor : neighbors) {

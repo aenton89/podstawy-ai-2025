@@ -1,6 +1,6 @@
 #pragma once
-#include <SFML/Graphics.hpp>
 #include <vector>
+#include <random>
 #include "../game_objects/player/player.h"
 #include "../game_objects/player/raycast.h"
 #include "../game_objects/obstacle/obstacle.h"
@@ -18,6 +18,8 @@ public:
 private:
 	sf::RenderWindow window;
 	sf::Clock clock;
+	// generator liczb losowych w sumie lepiej tu trzymać, bo jest często wywolywany
+	std::mt19937 gen;
 
 	Player player;
 	Raycast raycast;
@@ -29,9 +31,9 @@ private:
 	void initObstacles(int count);
 	void spawnEnemies(int max_amount);
 	void deleteDeadEnemies();
-	void updateAgentsState();
-	void keepInsideWindow(GameObject& obj);
+	void updateAgentsState() const;
+	void keepInsideWindow(GameObject& obj) const;
 	void gameOver();
 
-	void debug();
+	void debug() const;
 };

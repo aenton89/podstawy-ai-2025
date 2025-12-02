@@ -2,7 +2,8 @@
 #include "../../helpers/parameters.h"
 #include <numbers>
 #include <cmath>
-#include <iostream>
+#include <SFML/Graphics.hpp>
+
 
 
 Player::Player(float _speed, Game* _game): GameObject(0.f, 0.f, PLAYER_SIZE), speed(_speed) {
@@ -35,7 +36,7 @@ void Player::handleInput(float deltaTime) {
 	collider.position.y = pos.y;
 }
 
-void Player::updateRotation(sf::RenderWindow& window) {
+void Player::updateRotation(const sf::RenderWindow& window) {
 	sf::Vector2f pos = shape.getPosition();
 	sf::Vector2i mousePos = sf::Mouse::getPosition(window);
 
@@ -65,7 +66,7 @@ void Player::update(float dt, sf::RenderWindow &window) {
 	updateVelocity(dt);
 }
 
-sf::Vector2f Player::getForwardDirection(sf::RenderWindow& window) const {
+sf::Vector2f Player::getForwardDirection(const sf::RenderWindow& window) const {
 	sf::Vector2i mousePos = sf::Mouse::getPosition(window);
 	sf::Vector2f dir(mousePos.x - shape.getPosition().x, mousePos.y - shape.getPosition().y);
 	float length = std::sqrt(dir.x * dir.x + dir.y * dir.y);
