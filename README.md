@@ -1,21 +1,18 @@
-# SFML 2.6.2 setup (on Windows)
+# Projekty na przedmiot Podstawy AI (2025)
 
-## 1. required:
-- CMake
-- Conan
-- Visual C++ 17 (2022)
-
-## 2. PROJEKT 1 (strona 85. - chapter 3); TERMIN (chyba) 06.12
-### 2.1 chyba niepotrzebna notka
+## 1. chyba niepotrzebna notka
 korzysta z czcionki Public Sans (SIL Open Font License)
 
-### 2.2. ogólna zasada działania:
-#### 1) steering behaviours obliczane w dwóch stanach:
+## 2. PROJEKT 1 (strona 85. - chapter 3); TERMIN (chyba) 06.12
+### 2.1. ogólna zasada działania:
+#### 1) steering behaviours obliczane w trzech stanach:
 ```c++
-if (parent->getState() == State::Hide_Explore)
-    steeringForce = hide_explore();
-else
+if (parent->getState() == State::HideExplore)
+    steeringForce = hideExplore();
+else if (parent->getState() == State::Attack)
     steeringForce = attack();
+else
+    steeringForce = randomWander();
 ```
 
 hide/explore:
@@ -37,57 +34,32 @@ forceSum += obstacleAvoidance(parent->player->game->obstacles, parent->player->g
 forceSum += seek(parent->player->getPosition()) * MULT_SEEK;
 ```
 
+random wander:
+```c++
+forceSum += wallAvoidance() * MULT_WALL_AVOIDANCE;
+forceSum += obstacleAvoidance(parent->player->game->obstacles, parent->player->game->enemies) * MULT_OBSTACLE_AVOIDANCE;
+forceSum += wander() * MULT_WANDER;
+forceSum += flee(parent->player->getPosition()) * MULT_FLEE;
+```
 #### 2) logika przejść między stanami:
 ```c++
 if (enemy->getState() == State::Attack)
     continue;
 
-// lista wrogów w stanie Hide_Explore
-auto nearbyHEList = enemy->checkNeighborExploring(enemies, 100.f);
-if (static_cast<int>(nearbyHEList.size()) >= ATTACK_THRESHOLD) {
-    for (Enemy* e : nearbyHEList)
-        e->setState(State::Attack);    
+// lista wrogów w stanie HideExplore
+auto nearbyList = enemy->getNeighbours(enemies, GROUP_DISTANCE);
+if (static_cast<int>(nearbyList.size()) >= GROUP_THRESHOLD) {
+    for (Enemy* e : nearbyList) {
+        if (e->getState() != State::Attack)
+            e->setState(State::Attack);
+    }
 
     enemy->setState(State::Attack);
 }
 ```
+dodatkowo jeśli wróg się nie rusza przez dłuższy czas to przechodzi w stan RandomWander na określony czas
 
-### 2.3 pytania do prowadzącego/notatki do przemyślenia:
-- separacja * 0.3 (ogólnie mniejsza?
-- cooldown do tworzenai grup ataku?
-- w updateAgentState() - co z powrotem do stanu Hide_Explore? czy trzeba to zrobić? czy jak już atakują to na raz (point of no return)?
-- w updateAgentState() może być reakcja łancuchowa? czy ona ma być? opcja poprawy niżej:
-```c++
-void Game::updateAgentsState() const {
-    for (auto& enemy : enemies) {
-        if (enemy->getState() == State::Attack)
-            continue;
-        
-        auto nearbyHEList = enemy->checkNeighborExploring(enemies, 100.f);
-        
-        // czy w pobliżu NIE MA już atakujących botów
-        bool nearAttackers = false;
-        for (const auto& other : enemies) {
-            if (other->getState() == State::Attack) {
-                float dist = distanceVec2D(enemy->getPosition(), other->getPosition());
-                // strefa buforowa
-                if (dist < 200.f) {
-                    nearAttackers = true;
-                    break;
-                }
-            }
-        }
-        
-        if (!nearAttackers && static_cast<int>(nearbyHEList.size()) >= ATTACK_THRESHOLD) {
-            for (Enemy* e : nearbyHEList)
-                e->setState(State::Attack);
-            enemy->setState(State::Attack);
-        }
-    }
-}
-```
-
-### 2.4 DONE:
+### 2.2 DONE:
 - podstawowa mapa: przeszkody to pare rozmieszczonych okręgów
 - implementacja kolizji: gracz/przeciwnicy/przeszkody/krawędź ściany
 - collider gracza to okrąg (mimo, że jest reprezentowany przez trójkąt)
@@ -133,6 +105,12 @@ cmake --build . --config Release
 ```
 
 ### 3.4 run
+> [!IMPORTANT]
+> depending on which project you want to run
 ```
-.\Release\SFML-Base.exe
+.\project1\Release\project1.exe
+```
+or
+```
+.\project2\Release\project2.exe
 ```
