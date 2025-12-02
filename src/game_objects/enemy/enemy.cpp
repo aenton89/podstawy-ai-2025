@@ -1,4 +1,5 @@
 #include "enemy.h"
+#include "../../game/game.h"
 #include "../../helpers/parameters.h"
 #include "../../helpers/helper_methods.h"
 
@@ -12,6 +13,8 @@ Enemy::Enemy(float _x, float _y, Player* _player): GameObject(_x, _y, ENEMY_SIZE
 
 	steering.setParent(this);
 	player = _player;
+
+	idleTimeTreshold = std::uniform_real_distribution<float>(MIN_IDLE_TIME_THRESHOLD, MAX_IDLE_TIME_THRESHOLD)(Game::gen);
 }
 
 void Enemy::updateColliderPosition() {
@@ -21,6 +24,18 @@ void Enemy::updateColliderPosition() {
 void Enemy::update(float dt, sf::RenderWindow& window) {
 	steering_force = steering.calculate();
 	velocity += steering_force;
+
+	// RANDOM WANDER CONTROL
+	randomWanderSwitch(dt);
+	if (getState() == State::RandomWander) {
+		// sprawdź ile minęło czasu
+		float elapsed = randomWanderClock.getElapsedTime().asSeconds();
+
+		if (elapsed >= randomWanderDuration) {
+			setState(State::HideExplore);
+		}
+	}
+
 
 	// ograniczenie prędkości
 	auto length = std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
@@ -34,6 +49,8 @@ void Enemy::update(float dt, sf::RenderWindow& window) {
 		heading = sf::Vector2f(1.f,0.f);
 	side = sf::Vector2f(-heading.y, heading.x);
 
+	// aktualizacja pozycji i ostatniej pozycji
+	prevPosition = getPosition();
 	shape.move(velocity*dt);
 	updateColliderPosition();
 }
@@ -52,22 +69,25 @@ bool Enemy::isTagged() const {
 
 void Enemy::setState(State _state) {
 	currentState = _state;
-	if (currentState == State::Hide_Explore)
+	if (currentState == State::HideExplore)
 		shape.setFillColor(sf::Color::Green);
-	else
+	else if (currentState == State::Attack)
 		shape.setFillColor(sf::Color::Blue);
+	else if (currentState == State::RandomWander)
+		shape.setFillColor(sf::Color::Magenta);
 }
 
 State Enemy::getState() const {
 	return currentState;
 }
 
-// metoda wykrywa pobliskich agentów w stanie Hide_Explore i wysyła ich listę do Game
-std::vector<Enemy*> Enemy::checkNeighborExploring(const std::vector<std::unique_ptr<Enemy>>& neighbors, float radius) const {
+// metoda wykrywa pobliskich agentów i wysyła ich listę do Game
+std::vector<Enemy*> Enemy::getNeighbours(const std::vector<std::unique_ptr<Enemy>>& neighbors, float radius) const {
     std::vector<Enemy*> result;
 
     for (auto& neighbor : neighbors) {
-        if(neighbor->getState() == State::Attack) continue;
+    	if (neighbor.get() == this)
+    		continue;
 
         sf::Vector2f to = neighbor->getPosition() - this->getPosition();
         float distSq = to.x * to.x + to.y * to.y;
@@ -80,3 +100,40 @@ std::vector<Enemy*> Enemy::checkNeighborExploring(const std::vector<std::unique_
 
     return result;
 }
+
+// sprawdza czy wejść do stanu RandomWander, jeśli tak to wchodzi i zaczyna timer + losuje czas trwania stanu
+void Enemy::randomWanderSwitch(float dt) {
+	if (getState() == State::HideExplore) {
+		// jesli za duzo się nie poruszył w ostatnim czasie, to wchodzimy w randomWander
+		auto distMoved = distanceVec2D(getPosition(), prevPosition);
+
+		if (distMoved < 0.5f)
+			idleTimer += dt;
+		else
+			idleTimer = 0.f;
+
+		if (idleTimer >= idleTimeTreshold) {
+			idleTimer = 0.f;
+			idleTimeTreshold = std::uniform_real_distribution<float>(MIN_IDLE_TIME_THRESHOLD, MAX_IDLE_TIME_THRESHOLD)(Game::gen);
+
+			randomWanderDuration = std::uniform_real_distribution<float>(RANDOM_WANDER_MIN_TIME, RANDOM_WANDER_MAX_TIME)(Game::gen);
+			randomWanderClock.restart();
+
+			setState(State::RandomWander);
+		}
+	}
+}
+
+bool Enemy::checkRandomWanderTimeout() {
+	if (getState() == State::RandomWander) {
+		if (randomWanderClock.getElapsedTime().asSeconds() >= randomWanderDuration) {
+			// wracamy do HideExplore
+			setState(State::HideExplore);
+			return true;
+		}
+	}
+	return false;
+}
+
+
+

@@ -79,7 +79,8 @@ public:
 	sf::Vector2f calculate();
 	// funkcje z wybranymi steering behaviours dla konkretnych stanów
 	sf::Vector2f attack();
-	sf::Vector2f hide_explore();
+	sf::Vector2f hideExplore();
+	sf::Vector2f randomWander();
 
 	static bool accumulateForce(sf::Vector2f& runningTot, sf::Vector2f forceToAdd);
 };

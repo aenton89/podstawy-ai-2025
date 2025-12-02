@@ -7,7 +7,7 @@
 // na długość wektora prędkości
 #define MAX_ENEMY_SPEED 50.f
 
-#define MAX_ENEMIES_AMOUNT 40
+#define MAX_ENEMIES_AMOUNT 20
 #define MIN_ENEMY_EDGE_DIST 20.f
 #define MAX_ENEMY_EDGE_DIST 100.f
 
@@ -45,7 +45,17 @@
 #define MULT_SEEK 1.0f
 
 // ilosc wrogów by przejść w tryb ATTACK
-#define ATTACK_THRESHOLD 4
+#define GROUP_THRESHOLD 5
+#define GROUP_DISTANCE 200.f
 
 // pod metodę "Weighted Truncated Running Sum with Prioritization" - nieużyte na razie
 #define MAX_FORCE 80.f
+
+// pod stan randomWander
+#define RANDOM_WANDER_MIN_TIME 2.f
+#define RANDOM_WANDER_MAX_TIME 5.f
+#define RANDOM_WANDER_COOLDOWN 5.f
+// określa jak długo może stać w bezruchu zanim przejdzie do stanu randomWander
+#define MIN_IDLE_TIME_THRESHOLD 5.f
+#define MAX_IDLE_TIME_THRESHOLD 10.f
+#define IDLE_DISTANCE_THRESHOLD 2.f

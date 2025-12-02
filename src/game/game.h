@@ -15,11 +15,12 @@ public:
 
 	std::vector<std::unique_ptr<Obstacle>> obstacles;
 	std::vector<std::unique_ptr<Enemy>> enemies;
+	// generator liczb losowych w sumie lepiej tu trzymać, bo jest często wywolywany
+	static std::mt19937 gen;
+
 private:
 	sf::RenderWindow window;
 	sf::Clock clock;
-	// generator liczb losowych w sumie lepiej tu trzymać, bo jest często wywolywany
-	std::mt19937 gen;
 
 	Player player;
 	Raycast raycast;

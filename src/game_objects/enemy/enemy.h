@@ -7,8 +7,9 @@
 
 // TODO: do stanów
 enum State {
-	Hide_Explore,
-	Attack
+	HideExplore,
+	Attack,
+	RandomWander
 };
 
 
@@ -28,7 +29,15 @@ public:
 	// dla zachowań grupowych
 	bool tagged = false;
 	// TODO: stany
-	State currentState = State::Hide_Explore;
+	State currentState = State::HideExplore;
+	// zegar, bo do randomWander wchodzimy losowo co jakiś czas
+	sf::Clock randomWanderClock;
+	float randomWanderDuration = 0.f;
+	// poprzednia pozycja - też do randomWander
+	sf::Vector2f prevPosition;
+	// dzięki temu wiemy czy stoi w miejscu długo
+	float idleTimer = 0.f;
+	float idleTimeTreshold;
 
 	Enemy(float _x, float _y, Player* _player);
 
@@ -40,8 +49,10 @@ public:
 
 	void setState(State state);
 	State getState() const;
-	std::vector<Enemy*> checkNeighborExploring(const std::vector<std::unique_ptr<Enemy>>& neighbors, float radius) const;
+	std::vector<Enemy*> getNeighbours(const std::vector<std::unique_ptr<Enemy>>& neighbors, float radius) const;
 
+	void randomWanderSwitch(float dt);
+	bool checkRandomWanderTimeout();
 
 	void update(float dt, sf::RenderWindow& window) override;
 };

@@ -5,7 +5,10 @@
 
 
 
-Game::Game(): window(sf::VideoMode(1600, 900), "ASSIGNMENT 1: zombie game"), gen(std::random_device{}()), player(PLAYER_SPEED, this) {
+// zdefiniowanie statycznych w .cpp
+std::mt19937 Game::gen{ std::random_device{}() };
+
+Game::Game(): window(sf::VideoMode(1600, 900), "ASSIGNMENT 1: zombie game"), player(PLAYER_SPEED, this) {
 	sf::Vector2u winSize = window.getSize();
 	player.setPosition({ winSize.x / 2.f, winSize.y / 2.f });
 
@@ -132,23 +135,23 @@ void Game::deleteDeadEnemies() {
 	});
 }
 
-// TODO: idk czy nie trzeba dodać analogicznego, żeby wracał też do Hide_Explore
 // zmien stan wrogów na Attack
 void Game::updateAgentsState() const {
     for (auto& enemy : enemies) {
         if (enemy->getState() == State::Attack)
         	continue;
 
-		// lista wrogów w stanie Hide_Explore
-        auto nearbyHEList = enemy->checkNeighborExploring(enemies, 100.f);
-        if (static_cast<int>(nearbyHEList.size()) >= ATTACK_THRESHOLD) {
-            for (Enemy* e : nearbyHEList)
-                e->setState(State::Attack);    
+		// lista wrogów w stanie HideExplore
+        auto nearbyList = enemy->getNeighbours(enemies, GROUP_DISTANCE);
+        if (static_cast<int>(nearbyList.size()) >= GROUP_THRESHOLD) {
+            for (Enemy* e : nearbyList) {
+	            if (e->getState() != State::Attack)
+	            	e->setState(State::Attack);
+            }
 
             enemy->setState(State::Attack);
         }
     }
-
 }
 
 void Game::keepInsideWindow(GameObject& obj) const {
@@ -207,8 +210,6 @@ void Game::update(float deltaTime) {
 
 	// WROGOWIE: update + kolizje + spawnowanie
 	for (auto& e : enemies) {
-		// zapamiętaj pozycję WROGA (wcześniej dawałem gracza, xd) przed update
-		sf::Vector2f prevEnemyPos = e->getPosition();
 		e->update(deltaTime, window);
 		keepInsideWindow(*e);
 
@@ -216,8 +217,8 @@ void Game::update(float deltaTime) {
 		for (auto& o : obstacles) {
 			if (e->collider.checkCollision(o->collider)) {
 				// cofnij pozycję
-				e->setPosition(prevEnemyPos);
-				e->collider.position = { prevEnemyPos.x, prevEnemyPos.y };
+				e->setPosition(e->prevPosition);
+				e->collider.position = { e->prevPosition.x, e->prevPosition.y };
 				break;
 			}
 		}
@@ -236,8 +237,8 @@ void Game::update(float deltaTime) {
 
 			if (e->collider.checkCollision(other->collider)) {
 				// cofnij pozycję
-				e->setPosition(prevEnemyPos);
-				e->collider.position = { prevEnemyPos.x, prevEnemyPos.y };
+				e->setPosition(e->prevPosition);
+				e->collider.position = { e->prevPosition.x, e->prevPosition.y };
 				break;
 			}
 		}

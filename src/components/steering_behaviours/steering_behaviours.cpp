@@ -5,7 +5,7 @@
 #include "../../helpers/parameters.h"
 #include "../../helpers/helper_methods.h"
 #include <cmath>
-
+#include <iostream>
 
 
 SteeringBehaviours::SteeringBehaviours() {
@@ -61,16 +61,18 @@ sf::Vector2f SteeringBehaviours::calculate() {
     //  
     // return steeringForce;
 
-    if (parent->getState() == State::Hide_Explore)
-        steeringForce = hide_explore();
-    else
+    if (parent->getState() == State::HideExplore)
+        steeringForce = hideExplore();
+    else if (parent->getState() == State::Attack)
         steeringForce = attack();
+    else
+        steeringForce = randomWander();
     return steeringForce;
 }
 
 // zestaw sił wyliczanych w trybie Hide_Explore
-sf::Vector2f SteeringBehaviours::hide_explore() {
-    sf::Vector2f forceSum = sf::Vector2f(0, 0);
+sf::Vector2f SteeringBehaviours::hideExplore() {
+    auto forceSum = sf::Vector2f(0, 0);
     forceSum += wallAvoidance() * MULT_WALL_AVOIDANCE;
     forceSum += obstacleAvoidance(parent->player->game->obstacles, parent->player->game->enemies) * MULT_OBSTACLE_AVOIDANCE;
     forceSum += wander() * MULT_WANDER;
@@ -80,16 +82,30 @@ sf::Vector2f SteeringBehaviours::hide_explore() {
     forceSum += alignment(parent->player->game->enemies) * MULT_ALIGNMENT;
     forceSum += cohesion(parent->player->game->enemies) * MULT_COHESION;
     // forceSum += arrive(parent->player->getPosition(), ArriveDeceleration::normal) * 1.0f;
+
     return forceSum;
 }
+
 // i trybie Attack
 sf::Vector2f SteeringBehaviours::attack() {
-    sf::Vector2f forceSum = sf::Vector2f(0, 0);
+    auto forceSum = sf::Vector2f(0, 0);
     forceSum += wallAvoidance() * MULT_WALL_AVOIDANCE;
     forceSum += obstacleAvoidance(parent->player->game->obstacles, parent->player->game->enemies) * MULT_OBSTACLE_AVOIDANCE;
     forceSum += seek(parent->player->getPosition()) * MULT_SEEK;
+
     return forceSum;
 }
+
+sf::Vector2f SteeringBehaviours::randomWander() {
+    auto forceSum = sf::Vector2f(0, 0);
+    forceSum += wallAvoidance() * MULT_WALL_AVOIDANCE;
+    forceSum += obstacleAvoidance(parent->player->game->obstacles, parent->player->game->enemies) * MULT_OBSTACLE_AVOIDANCE;
+    forceSum += wander() * MULT_WANDER;
+    forceSum += flee(parent->player->getPosition()) * MULT_FLEE;
+
+    return forceSum;
+}
+
 
 // pod kalkulację steering force z prioretyzacją
 bool SteeringBehaviours::accumulateForce(sf::Vector2f& runningTot, sf::Vector2f forceToAdd) {
@@ -132,7 +148,7 @@ sf::Vector2f SteeringBehaviours::wallAvoidance() {
     createFeelers();
     sf::Vector2f steeringForce(0.f, 0.f);
 
-    // Uproszczony, dla 4-ech ścian = brzegów ekranu
+    // uproszczony, dla 4-ech ścian = brzegów ekranu
     for (const auto& feeler : feelers) {
         if (feeler.x < 0) {
             float overshoot = -feeler.x;
