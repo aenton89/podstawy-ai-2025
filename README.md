@@ -1,4 +1,4 @@
-# SFML 2.6.2 setup (on Windows)
+# Projekty na przedmiot Podstawy AI (2025)
 
 ## 1. chyba niepotrzebna notka
 korzysta z czcionki Public Sans (SIL Open Font License)
