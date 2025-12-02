@@ -105,12 +105,6 @@ cmake --build . --config Release
 ```
 
 ### 3.4 run
-> [!IMPORTANT]
-> depending on which project you want to run
 ```
-.\project1\Release\project1.exe
-```
-or
-```
-.\project2\Release\project2.exe
+.\Release\SFML-Base.exe
 ```
