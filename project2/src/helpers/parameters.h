@@ -1,0 +1,17 @@
+#pragma once
+
+#define ENEMIES_AMOUNT 4
+#define HEALTH 100
+
+// pod bronie
+#define RAIL_GUN_DMG 50
+#define RAIL_GUN_RANGE 4000.f
+#define RAIL_GUN_AMMO_CAPACITY 5
+
+#define ROCKET_LAUNCHER_DMG 20
+#define ROCKET_LAUNCHER_RANGE 500.f
+#define ROCKET_LAUNCHER_AMMO_CAPACITY 10
+
+// collectables - ammo i heal
+#define AMMO_RAIL_GUN_PICKUP_AMOUNT 2
+#define AMMO_ROCKET_LAUNCHER_PICKUP_AMOUNT 4

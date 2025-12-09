@@ -3,7 +3,10 @@
 ## 1. chyba niepotrzebna notka
 korzysta z czcionki Public Sans (SIL Open Font License)
 
-## 2. PROJEKT 1 (strona 85. - chapter 3); TERMIN (chyba) 06.12
+## 2. PROJEKT 1 
+- steering behaviours - chapter 3 (str. 85) 
+- TERMIN - 06.12
+
 ### 2.1. ogólna zasada działania:
 #### 1) steering behaviours obliczane w trzech stanach:
 ```c++
@@ -70,20 +73,37 @@ dodatkowo jeśli wróg się nie rusza przez dłuższy czas to przechodzi w stan 
 - przeciwnicy atakują melee
 - sterowani przez steering behaviours
 
-## 3. run:
-### 3.0 prerequisites
+## 3. PROJEKT 2
+- FSM - chapter 2 (str. 43)
+- more FSM - chapter 6 (str. 249 dokładniej od 285)
+- graphs and pathfinding - chapter 8 (str. 333)
+
+### 3.1. TO DO:
+- railgun i rocket launcher
+- zdrowie i amunicja do podniesienia
+- mapa (prostokąt) z przeszkodami (wielokąty), nie da się wyjść za ekran
+- 4 boty (bez gracza) reprezentowane przez okręgi
+- boty korzystają z FSM
+- pathfinding (A*), graf generowany przez flood fill
+- poruszanie się w 8 kierunkach (kratownica z punktami co rozmiar bota)
+
+### 3.2 DONE:
+- narazie nic
+
+## 4. run:
+### 4.0 prerequisites
 - install cmake
 - install conan
 - install Visual C++ 17 (2022)
 > [!IMPORTANT]
 > or any other C++ compiler supported by conan and cmake - change generator in cmake command below accordingly
 
-### 3.1 detect conan profile
+### 4.1 detect conan profile
 ```
 conan profile detect --force
 ```
 
-### 3.2 install dependencies (SFML, etc.)
+### 4.2 install dependencies (SFML, etc.)
 ```
 conan install . --output-folder=build --build=missing
 ```
@@ -96,7 +116,7 @@ cd build
 > [!WARNING]
 > till this day don't know why and what this does
 
-### 3.3 cmake build
+### 4.3 cmake build
 ```
 cmake .. -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake"
 ```
@@ -104,7 +124,7 @@ cmake .. -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmak
 cmake --build . --config Release
 ```
 
-### 3.4 run
+### 4.4 run
 > [!IMPORTANT]
 > depending on which project you want to run
 ```

@@ -128,7 +128,6 @@ void Game::spawnEnemies(int max_amount) {
     }
 }
 
-
 void Game::deleteDeadEnemies() {
 	std::erase_if(enemies, [](const std::unique_ptr<Enemy>& e) {
 		return e->was_hit;
