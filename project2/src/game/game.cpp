@@ -74,5 +74,6 @@ void Game::gameOver() {
 }
 
 void Game::deleteDeadBots() {
+	// TODO: usuwanie martwych botów
 	return;
 }

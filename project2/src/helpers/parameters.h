@@ -1,7 +1,7 @@
 #pragma once
 
 #define ENEMIES_AMOUNT 4
-#define HEALTH 100
+#define MAX_HEALTH 100
 
 // pod bronie
 #define RAIL_GUN_DMG 50
