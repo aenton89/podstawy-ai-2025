@@ -5,9 +5,9 @@
 
 
 class Bot {
-	int health = MAX_HEALTH;
-	int rail_gun_ammo = RAIL_GUN_AMMO_CAPACITY;
-	int rocket_launcher_ammo = ROCKET_LAUNCHER_AMMO_CAPACITY;
+	int health = Parameters::BOT_MAX_HEALTH;
+	int rail_gun_ammo = Parameters::RAILGUN_MAX_AMMO;
+	int rocket_launcher_ammo = Parameters::ROCKET_MAX_AMMO;
 
 	FSM fsm;
 };

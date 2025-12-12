@@ -1,17 +1,29 @@
 #pragma once
 
-#define ENEMIES_AMOUNT 4
-#define MAX_HEALTH 100
 
-// pod bronie
-#define RAIL_GUN_DMG 50
-#define RAIL_GUN_RANGE 4000.f
-#define RAIL_GUN_AMMO_CAPACITY 5
 
-#define ROCKET_LAUNCHER_DMG 20
-#define ROCKET_LAUNCHER_RANGE 500.f
-#define ROCKET_LAUNCHER_AMMO_CAPACITY 10
+namespace Parameters {
+	constexpr float MAP_WIDTH = 1600.f;
+	constexpr float MAP_HEIGHT = 900.f;
 
-// collectables - ammo i heal
-#define AMMO_RAIL_GUN_PICKUP_AMOUNT 2
-#define AMMO_ROCKET_LAUNCHER_PICKUP_AMOUNT 4
+	constexpr float BOT_RADIUS = 15.f;
+	constexpr float BOT_MAX_HEALTH = 100.f;
+	// pikseli na sekundę
+	constexpr float BOT_SPEED = 100.f;
+
+	constexpr float RAILGUN_DAMAGE = 40.f;
+	// w sekundach
+	constexpr float RAILGUN_RELOAD_TIME = 2.5f;
+	constexpr int RAILGUN_MAX_AMMO = 10;
+
+	constexpr float ROCKET_DAMAGE = 30.f;
+	// pikseli na sekundę
+	constexpr float ROCKET_SPEED = 200.f;
+	constexpr float ROCKET_EXPLOSION_RADIUS = 50.f;
+	constexpr float ROCKET_RELOAD_TIME = 1.5f;
+	constexpr int ROCKET_MAX_AMMO = 15;
+
+	constexpr int AMMO_PACK_RAILGUN_AMOUNT = 3;
+	constexpr int AMMO_PACK_ROCKET_AMOUNT = 5;
+	constexpr float HEALTH_PACK_AMOUNT = 30.f;
+}
