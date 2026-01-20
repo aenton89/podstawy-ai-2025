@@ -5,7 +5,7 @@
 
 #define ENEMY_SIZE 15.f
 // na długość wektora prędkości
-#define MAX_ENEMY_SPEED 50.f
+#define MAX_ENEMY_SPEED 150.f
 
 #define MAX_ENEMIES_AMOUNT 20
 #define MIN_ENEMY_EDGE_DIST 20.f
@@ -45,7 +45,7 @@
 #define MULT_SEEK 1.0f
 
 // ilosc wrogów by przejść w tryb ATTACK
-#define GROUP_THRESHOLD 5
+#define GROUP_THRESHOLD 6
 #define GROUP_DISTANCE 200.f
 
 // pod metodę "Weighted Truncated Running Sum with Prioritization" - nieużyte na razie

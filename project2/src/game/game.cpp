@@ -12,6 +12,7 @@ Game::Game(): window(sf::VideoMode(Parameters::MAP_WIDTH, Parameters::MAP_HEIGHT
 	sf::Vector2u winSize = window.getSize();
 
 	generateMap();
+	spawnBots();
 }
 
 void Game::run() {
@@ -47,7 +48,12 @@ void Game::processEvents() {
 
 void Game::update(float deltaTime) {
 	// TODO: update botów i spawn heal'ów/amunicji
+	for (auto& bot : bots) {
+		bot->followPath(deltaTime);
 
+		if (bot->hasArrived())
+			bot->selectRandomNode();
+	}
 
 	deleteDeadBots();
 }
@@ -61,6 +67,14 @@ void Game::render() {
 	if (showGraph)
 		navGraph->draw(window, showNodes, showEdges);
 
+	// rysuj boty
+	sf::CircleShape botShape(Parameters::BOT_RADIUS);
+	botShape.setOrigin(Parameters::BOT_RADIUS, Parameters::BOT_RADIUS);
+	for (const auto& bot : bots) {
+		botShape.setPosition(bot->getPosition());
+		botShape.setFillColor(bot->getColor());
+		window.draw(botShape);
+	}
 
 	window.display();
 }
@@ -97,8 +111,26 @@ void Game::deleteDeadBots() {
 }
 
 void Game::spawnBots() {
-	// TODO: spawn botów
-	return;
+	const sf::Color botColors[] = {
+		sf::Color::Red,
+		sf::Color::Blue,
+		sf::Color::Green,
+		sf::Color::Magenta
+	};
+
+	std::uniform_int_distribution<size_t> dist(0, spawnPoints.size() - 1);
+
+	for (int i = 0; i < Parameters::MAX_BOTS; ++i) {
+		// wylosuj spawnpointa
+		sf::Vector2f spawnPoint = spawnPoints[dist(gen)];
+
+		// stwórz bota i ustaw mu graf, węzęł, kolor i wstaw do listy botów
+		auto bot = std::make_unique<Bot>(i, spawnPoint);
+		bot->setNavGraph(navGraph.get());
+		bot->selectRandomNode();
+		bot->setColor(botColors[i]);
+		bots.push_back(std::move(bot));
+	}
 }
 
 void Game::generateMap() {

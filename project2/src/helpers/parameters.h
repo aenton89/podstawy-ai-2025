@@ -3,6 +3,8 @@
 
 
 namespace Parameters {
+	constexpr int MAX_BOTS = 4;
+
 	constexpr float MAP_WIDTH = 1600.f;
 	constexpr float MAP_HEIGHT = 900.f;
 
