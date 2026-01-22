@@ -50,18 +50,25 @@ void Game::processEvents() {
 void Game::update(float deltaTime) {
 	// TODO: update botów i spawn heal'ów/amunicji
 	for (auto& bot : bots) {
-		// losowe podążanie za ścieżką
-		// bot->followPath(deltaTime);
-		// if (bot->hasArrived())
-		// 	bot->selectRandomNode();
+		// tylko dla 1. bota
+		if (bots.front() == bot) {
+			sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
+			sf::Vector2f pos(pixelPos.x, pixelPos.y);
 
-		// poruszanie się jako gracz - debug
-		bot->playerControl();
-		bot->followPath(deltaTime);
+			// poruszanie się jako gracz - debug
+			bot->playerControl(pos);
+			bot->followPath(deltaTime);
+		}
+		else {
+			// losowe podążanie za ścieżką
+			bot->followPath(deltaTime);
+			if (bot->hasArrived())
+				bot->selectRandomNode();
+		}
 
-		// sprawdzenie czy trzeba przeładować
-		bot->railGun.reloading(deltaTime);
-		bot->rocketLauncher.reloading(deltaTime);
+		// sprawdzenie czy trzeba przeładować i update stanu wizualizacji
+		bot->railGun.update(deltaTime);
+		bot->rocketLauncher.update(deltaTime);
 	}
 
 	// update pickupów i sprawdzenie kolizji
@@ -91,6 +98,12 @@ void Game::render() {
 		botShape.setPosition(bot->getPosition());
 		botShape.setFillColor(bot->getColor());
 		window.draw(botShape);
+	}
+
+	// rysuj promienie railgunów
+	for (const auto& bot : bots) {
+		bot->railGun.draw(window);
+		bot->rocketLauncher.draw(window);
 	}
 
 	window.display();
@@ -144,6 +157,7 @@ void Game::spawnBots() {
 
 		// stwórz bota i ustaw mu graf, węzęł, kolor i wstaw do listy botów
 		auto bot = std::make_unique<Bot>(i, spawnPoint);
+		bot->game = this;
 		bot->setNavGraph(navGraph.get());
 		bot->selectRandomNode();
 		bot->setColor(botColors[i]);

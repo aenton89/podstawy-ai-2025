@@ -17,6 +17,7 @@ namespace Parameters {
 	// w sekundach
 	constexpr float RAILGUN_RELOAD_TIME = 2.5f;
 	constexpr int RAILGUN_MAX_AMMO = 10;
+	constexpr float RAILGUN_RANGE = 2000.f;
 
 	constexpr float ROCKET_DAMAGE = 30.f;
 	// pikseli na sekundę
@@ -24,6 +25,7 @@ namespace Parameters {
 	constexpr float ROCKET_EXPLOSION_RADIUS = 50.f;
 	constexpr float ROCKET_RELOAD_TIME = 1.5f;
 	constexpr int ROCKET_MAX_AMMO = 15;
+	constexpr float ROCKET_RANGE = 300.f;
 
 	constexpr int AMMO_PACK_RAILGUN_AMOUNT = 3;
 	constexpr int AMMO_PACK_ROCKET_AMOUNT = 5;

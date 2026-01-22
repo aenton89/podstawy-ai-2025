@@ -45,7 +45,7 @@ bool Bot::hasArrived() const {
 }
 
 // pod debug
-void Bot::playerControl() {
+void Bot::playerControl(sf::Vector2f mousePos) {
     if (!navGraph)
         return;
 
@@ -55,11 +55,29 @@ void Bot::playerControl() {
             std::cout << "Self damage! HP: " << health.getHealth() << std::endl;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) {
-        railGun.shoot();
+        // zamień pozycję myszy na najbliższy węzeł w grafie
+        sf::Vector2f targetNodePos = getClosestNodePosition(mousePos);
+
+        sf::Vector2f rawDir = targetNodePos - position;
+        float len = std::sqrt(rawDir.x*rawDir.x + rawDir.y*rawDir.y);
+
+        if (len > 0.f)
+            rawDir /= len;
+
+        railGun.shoot(position, rawDir, this, &game->bots);
         std::cout << "RailGun shot! Ammo: " << railGun.getAmmo() << std::endl;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num3)) {
-        rocketLauncher.shoot();
+        // zamień pozycję myszy na najbliższy węzeł w grafie
+        sf::Vector2f targetNodePos = getClosestNodePosition(mousePos);
+
+        sf::Vector2f rawDir = targetNodePos - position;
+        float len = std::sqrt(rawDir.x*rawDir.x + rawDir.y*rawDir.y);
+
+        if (len > 0.f)
+            rawDir /= len;
+
+        rocketLauncher.shoot(position, rawDir, this, &game->bots);
         std::cout << "Rocket shot! Ammo: " << rocketLauncher.getAmmo() << std::endl;
     }
 
@@ -121,4 +139,28 @@ void Bot::playerControl() {
         currentPath = navGraph->findPath(position, nodes[bestNeighbor].position);
         currentPathIndex = 0;
     }
+}
+
+sf::Vector2f Bot::getClosestNodePosition(const sf::Vector2f &targetPos) const {
+    if (!navGraph)
+        return targetPos;
+
+    const auto& nodes = navGraph->getNodes();
+    if (nodes.empty())
+        return targetPos;
+
+    // znajdź najbliższy węzeł do podanej pozycji
+    size_t closestNode = 0;
+    float minDist = INFINITY;
+
+    for (size_t i = 0; i < nodes.size(); ++i) {
+        sf::Vector2f diff = nodes[i].position - targetPos;
+        float dist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+        if (dist < minDist) {
+            minDist = dist;
+            closestNode = i;
+        }
+    }
+
+    return nodes[closestNode].position;
 }

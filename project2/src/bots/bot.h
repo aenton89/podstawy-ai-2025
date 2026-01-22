@@ -8,12 +8,15 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 
+class Game;
+
 
 
 class Bot {
 public:
 	Bot(int id, const sf::Vector2f& startPosition);
 
+	Game* game;
 	FSM fsm;
 	Health health;
 	RocketLauncher rocketLauncher;
@@ -29,7 +32,9 @@ public:
 	bool hasArrived() const;
 
 	// pod debug ruchem gracza
-	void playerControl();
+	void playerControl(sf::Vector2f mousePos);
+	// pomocnicze metody pod debug
+	sf::Vector2f getClosestNodePosition(const sf::Vector2f& targetPos) const;
 
 private:
 	int id;

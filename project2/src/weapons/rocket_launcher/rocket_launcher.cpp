@@ -15,11 +15,11 @@ void RocketLauncher::addAmmo(int amount) {
 	}
 }
 
-void RocketLauncher::shoot() {
+void RocketLauncher::shoot(const sf::Vector2f& shooterPos, const sf::Vector2f& direction, Bot* shooter, std::vector<std::unique_ptr<Bot>>* allBots) {
 	if (!canShoot())
 		return;
 
-	Weapon::shoot();
+	Weapon::shoot(shooterPos, direction, shooter, allBots);
 
 	// TODO: zaimplementować mechanike
 }
