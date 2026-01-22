@@ -12,6 +12,7 @@ Game::Game(): window(sf::VideoMode(Parameters::MAP_WIDTH, Parameters::MAP_HEIGHT
 	sf::Vector2u winSize = window.getSize();
 
 	generateMap();
+	spawnPickups();
 	spawnBots();
 }
 
@@ -49,11 +50,22 @@ void Game::processEvents() {
 void Game::update(float deltaTime) {
 	// TODO: update botów i spawn heal'ów/amunicji
 	for (auto& bot : bots) {
+		// losowe podążanie za ścieżką
+		// bot->followPath(deltaTime);
+		// if (bot->hasArrived())
+		// 	bot->selectRandomNode();
+
+		// poruszanie się jako gracz - debug
+		bot->playerControl();
 		bot->followPath(deltaTime);
 
-		if (bot->hasArrived())
-			bot->selectRandomNode();
+		// sprawdzenie czy trzeba przeładować
+		bot->railGun.reloading(deltaTime);
+		bot->rocketLauncher.reloading(deltaTime);
 	}
+
+	// update pickupów i sprawdzenie kolizji
+	updatePickups(deltaTime);
 
 	deleteDeadBots();
 }
@@ -66,6 +78,11 @@ void Game::render() {
 	// rysuj graf nawigacji - tylko jeśli jest włączony
 	if (showGraph)
 		navGraph->draw(window, showNodes, showEdges);
+
+	// rysuj pickupy
+	for (const auto& pickup : pickups) {
+		pickup->draw(window);
+	}
 
 	// rysuj boty
 	sf::CircleShape botShape(Parameters::BOT_RADIUS);
@@ -106,8 +123,9 @@ void Game::gameOver() {
 }
 
 void Game::deleteDeadBots() {
-	// TODO: usuwanie martwych botów
-	return;
+	std::erase_if(bots,[](const std::unique_ptr<Bot>& b) {
+		              return b->health.getHealth() <= 0;
+	              });
 }
 
 void Game::spawnBots() {
@@ -165,6 +183,40 @@ void Game::generateMap() {
 	std::cout << "Navigation graph generated with " << navGraph->getNodes().size() << " nodes" << std::endl;
 }
 
+void Game::spawnPickups() {
+	// ustalone pozycje pickupów na mapie
+	// health packi (zielone)
+	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(800.f, 450.f)));
+	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(400.f, 200.f)));
+	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(1200.f, 700.f)));
+	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(400.f, 700.f)));
+	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(1200.f, 200.f)));
+
+	// railgun ammo (żółte)
+	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(200.f, 450.f)));
+	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(1400.f, 450.f)));
+	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(800.f, 150.f)));
+	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(800.f, 750.f)));
+
+	// rocket ammo (cyan)
+	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(600.f, 300.f)));
+	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(1000.f, 300.f)));
+	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(600.f, 600.f)));
+	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(1000.f, 600.f)));
+}
+
+void Game::updatePickups(float deltaTime) {
+	for (auto& pickup : pickups) {
+		pickup->update(deltaTime);
+
+		// sprawdź kolizje z botami
+		for (auto& bot : bots) {
+			if (pickup->checkCollision(bot->getPosition(), Parameters::BOT_RADIUS)) {
+				pickup->applyEffect(bot.get());
+			}
+		}
+	}
+}
 
 void Game::debug() const {
 	std::cout << "\n=== DEBUG INFO ===" << std::endl;

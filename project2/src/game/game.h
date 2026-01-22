@@ -5,6 +5,8 @@
 #include "../map/map.h"
 #include "../map/navigation_graph.h"
 #include "../bots/bot.h"
+#include "../pickups/pickup.h"
+
 
 
 class Game {
@@ -18,6 +20,10 @@ public:
 
 	// spawnowane boty
 	std::vector<std::unique_ptr<Bot>> bots;
+
+	// pickupy
+	std::vector<std::unique_ptr<Pickup>> pickups;
+
 	// spawnpointy (idk czy tu)
 	std::vector<sf::Vector2f> spawnPoints = {
 		{100.f, 100.f},
@@ -44,8 +50,13 @@ private:
 
 	void generateMap();
 	void spawnBots();
+	void spawnHealthPack();
+	void spawnAmmoPack();
+	void spawnPickups();
+	void updatePickups(float deltaTime);
 	void deleteDeadBots();
 	void gameOver();
+
 
 	void debug() const;
 };

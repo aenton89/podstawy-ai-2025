@@ -1,8 +1,10 @@
 #pragma once
-
 #include "../helpers/parameters.h"
 #include "../components/fsm/fsm.h"
 #include "../map/navigation_graph.h"
+#include "../components/health/health.h"
+#include "../weapons/rail_gun/rail_gun.h"
+#include "../weapons/rocket_launcher/rocket_launcher.h"
 #include <SFML/Graphics.hpp>
 #include <vector>
 
@@ -12,11 +14,10 @@ class Bot {
 public:
 	Bot(int id, const sf::Vector2f& startPosition);
 
-	int health = Parameters::BOT_MAX_HEALTH;
-	int rail_gun_ammo = Parameters::RAILGUN_MAX_AMMO;
-	int rocket_launcher_ammo = Parameters::ROCKET_MAX_AMMO;
-
 	FSM fsm;
+	Health health;
+	RocketLauncher rocketLauncher;
+	RailGun railGun;
 
 	void setNavGraph(NavigationGraph* graph) { navGraph = graph; }
 	void selectRandomNode();
@@ -27,6 +28,8 @@ public:
 	void followPath(float deltaTime);
 	bool hasArrived() const;
 
+	// pod debug ruchem gracza
+	void playerControl();
 
 private:
 	int id;

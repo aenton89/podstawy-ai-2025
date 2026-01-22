@@ -15,6 +15,8 @@ add_executable(project2
         src/weapons/rail_gun/rail_gun.cpp
         src/weapons/rocket_launcher/rocket_launcher.cpp
         src/components/fsm/fsm.cpp
+        src/components/health/health.cpp
+        src/pickups/pickup.cpp
 )
 
 target_link_libraries(project2 sfml-graphics sfml-window sfml-system)

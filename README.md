@@ -90,20 +90,24 @@ dodatkowo jeśli wróg się nie rusza przez dłuższy czas to przechodzi w stan 
 ### 3.2 DONE:
 - narazie nic
 
-## 4. run:
-### 4.0 prerequisites
+## 4. PROJEKT 3
+### link do projektu
+- [google colab](https://colab.research.google.com/drive/15bUXQlpYF9iAhuW_AbDBQ5Aih5sYbPrh?usp=sharing)
+
+## 5. run:
+### 5.0 prerequisites
 - install cmake
 - install conan
 - install Visual C++ 17 (2022)
 > [!IMPORTANT]
 > or any other C++ compiler supported by conan and cmake - change generator in cmake command below accordingly
 
-### 4.1 detect conan profile
+### 5.1 detect conan profile
 ```
 conan profile detect --force
 ```
 
-### 4.2 install dependencies (SFML, etc.)
+### 5.2 install dependencies (SFML, etc.)
 ```
 conan install . --output-folder=build --build=missing
 ```
@@ -116,7 +120,7 @@ cd build
 > [!WARNING]
 > till this day don't know why and what this does
 
-### 4.3 cmake build
+### 5.3 cmake build
 ```
 cmake .. -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake"
 ```
@@ -124,7 +128,7 @@ cmake .. -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmak
 cmake --build . --config Release
 ```
 
-### 4.4 run
+### 5.4 run
 > [!IMPORTANT]
 > depending on which project you want to run
 ```
