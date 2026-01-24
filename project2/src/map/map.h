@@ -15,6 +15,7 @@ public:
 
 	bool isPositionValid(const sf::Vector2f& pos, float radius) const;
 	bool isPathClear(const sf::Vector2f& from, const sf::Vector2f& to, float radius) const;
+	bool isCircleCollidingWithObstacles(const sf::Vector2f& pos, float radius) const;
 
 	void draw(sf::RenderWindow& window) const;
 

@@ -79,6 +79,16 @@ bool Map::isPathClear(const sf::Vector2f& from, const sf::Vector2f& to, float ra
     return true;
 }
 
+bool Map::isCircleCollidingWithObstacles(const sf::Vector2f& pos, float radius) const {
+    // sprawdź kolizję z przeszkodami
+    for (const auto& obstacle : obstacles) {
+        if (obstacle.intersectsCircle(pos, radius))
+            return true;
+    }
+
+    return false;
+}
+
 void Map::draw(sf::RenderWindow& window) const {
     window.draw(border);
 

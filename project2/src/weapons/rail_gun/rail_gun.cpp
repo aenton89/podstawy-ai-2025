@@ -84,14 +84,16 @@ void RailGun::draw(sf::RenderWindow& window) {
 	if (!beamActive)
 		return;
 
-	// rysuj linię promienia - cyan z przezroczystością, zanikający koniec
+	// fading lasera
+	float alpha = (beamTimer / beamDuration) * 200.f;
+
+	// rysuj laser
 	sf::Vertex line[] = {
-		sf::Vertex(beamStart, sf::Color(0, 255, 255, 200)),
-		sf::Vertex(beamEnd, sf::Color(0, 255, 255, 50))
+		sf::Vertex(beamStart, sf::Color(0, 255, 255, static_cast<sf::Uint8>(alpha))),
+		sf::Vertex(beamEnd, sf::Color(0, 255, 255, static_cast<sf::Uint8>(alpha * 0.25f)))
 	};
 	window.draw(line, 2, sf::Lines);
 
-	// opcjonalnie: narysuj grubszą linię dla efektu
 	sf::RectangleShape beam;
 	sf::Vector2f direction = beamEnd - beamStart;
 	float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
@@ -100,7 +102,7 @@ void RailGun::draw(sf::RenderWindow& window) {
 	beam.setSize(sf::Vector2f(length, 3.f));
 	beam.setPosition(beamStart);
 	beam.setRotation(angle);
-	beam.setFillColor(sf::Color(0, 255, 255, 150));
+	beam.setFillColor(sf::Color(0, 255, 255, static_cast<sf::Uint8>(alpha * 0.75f)));
 	window.draw(beam);
 }
 

@@ -11,4 +11,5 @@ public:
 	void addHealth(int amount);
 	void takeDamage(int amount);
 	int getHealth() const { return health; }
+	void restore() { health = Parameters::BOT_MAX_HEALTH; }
 };

@@ -54,7 +54,7 @@ private:
 	void spawnAmmoPack();
 	void spawnPickups();
 	void updatePickups(float deltaTime);
-	void deleteDeadBots();
+	void respawnDeadBots();
 	void gameOver();
 
 

@@ -48,7 +48,7 @@ bool Pickup::checkCollision(const sf::Vector2f& botPos, float botRadius) {
 
 
 // HealthPack
-HealthPack::HealthPack(const sf::Vector2f& pos): Pickup(pos, PickupType::HealthPack, sf::Color::Green) {}
+HealthPack::HealthPack(const sf::Vector2f& pos): Pickup(pos, PickupType::HealthPack, sf::Color::Red) {}
 
 void HealthPack::applyEffect(Bot* bot) {
 	bot->health.addHealth(Parameters::HEALTH_PACK_AMOUNT);
@@ -57,7 +57,7 @@ void HealthPack::applyEffect(Bot* bot) {
 
 
 // RailGunAmmoPack
-RailGunAmmoPack::RailGunAmmoPack(const sf::Vector2f& pos): Pickup(pos, PickupType::RailGunAmmo, sf::Color::Yellow) {}
+RailGunAmmoPack::RailGunAmmoPack(const sf::Vector2f& pos): Pickup(pos, PickupType::RailGunAmmo, sf::Color::Cyan) {}
 
 void RailGunAmmoPack::applyEffect(Bot* bot) {
 	bot->railGun.addAmmo(Parameters::AMMO_PACK_RAILGUN_AMOUNT);
@@ -66,7 +66,7 @@ void RailGunAmmoPack::applyEffect(Bot* bot) {
 
 
 // RocketAmmoPack
-RocketAmmoPack::RocketAmmoPack(const sf::Vector2f& pos): Pickup(pos, PickupType::RocketAmmo, sf::Color::Cyan) {}
+RocketAmmoPack::RocketAmmoPack(const sf::Vector2f& pos): Pickup(pos, PickupType::RocketAmmo, sf::Color::Yellow) {}
 
 void RocketAmmoPack::applyEffect(Bot* bot) {
 	bot->rocketLauncher.addAmmo(Parameters::AMMO_PACK_ROCKET_AMOUNT);

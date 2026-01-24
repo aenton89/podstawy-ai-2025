@@ -27,6 +27,8 @@ public:
 	void setColor(const sf::Color& c) { color = c; }
 	const sf::Color& getColor() const { return color; }
 	const sf::Vector2f& getPosition() const { return position; }
+	void setPosition(const sf::Vector2f& pos) { position = pos; }
+	int getId() const { return id; }
 
 	void followPath(float deltaTime);
 	bool hasArrived() const;

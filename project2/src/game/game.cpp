@@ -74,7 +74,7 @@ void Game::update(float deltaTime) {
 	// update pickupów i sprawdzenie kolizji
 	updatePickups(deltaTime);
 
-	deleteDeadBots();
+	respawnDeadBots();
 }
 
 void Game::render() {
@@ -135,10 +135,20 @@ void Game::gameOver() {
 	window.close();
 }
 
-void Game::deleteDeadBots() {
-	std::erase_if(bots,[](const std::unique_ptr<Bot>& b) {
-		              return b->health.getHealth() <= 0;
-	              });
+void Game::respawnDeadBots() {
+	std::uniform_int_distribution<size_t> dist(0, spawnPoints.size() - 1);
+
+	for (auto& bot : bots) {
+		if (bot->health.getHealth() <= 0) {
+			// reset bot's health and position
+			bot->health.restore();
+			sf::Vector2f spawnPoint = spawnPoints[dist(gen)];
+			bot->setPosition(spawnPoint);
+			bot->selectRandomNode();
+
+			std::cout << "Bot " << bot->getId() << " respawned at (" << spawnPoint.x << ", " << spawnPoint.y << ")" << std::endl;
+		}
+	}
 }
 
 void Game::spawnBots() {
@@ -159,6 +169,7 @@ void Game::spawnBots() {
 		auto bot = std::make_unique<Bot>(i, spawnPoint);
 		bot->game = this;
 		bot->setNavGraph(navGraph.get());
+		bot->rocketLauncher.setMap(map.get());
 		bot->selectRandomNode();
 		bot->setColor(botColors[i]);
 		bots.push_back(std::move(bot));
@@ -199,20 +210,20 @@ void Game::generateMap() {
 
 void Game::spawnPickups() {
 	// ustalone pozycje pickupów na mapie
-	// health packi (zielone)
+	// health packi (czerwony)
 	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(800.f, 450.f)));
 	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(400.f, 200.f)));
 	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(1200.f, 700.f)));
 	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(400.f, 700.f)));
 	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(1200.f, 200.f)));
 
-	// railgun ammo (żółte)
+	// railgun ammo (cyan)
 	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(200.f, 450.f)));
 	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(1400.f, 450.f)));
 	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(800.f, 150.f)));
 	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(800.f, 750.f)));
 
-	// rocket ammo (cyan)
+	// rocket ammo (żółty lol)
 	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(600.f, 300.f)));
 	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(1000.f, 300.f)));
 	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(600.f, 600.f)));
