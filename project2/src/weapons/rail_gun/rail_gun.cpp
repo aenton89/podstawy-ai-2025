@@ -5,7 +5,7 @@
 
 RailGun::RailGun() {
 	damage = Parameters::RAILGUN_DAMAGE;
-	ammo = Parameters::RAILGUN_MAX_AMMO;
+	ammo = Parameters::RAILGUN_RESPAWN_AMMO;
 	cooldown = Parameters::RAILGUN_RELOAD_TIME;
 }
 

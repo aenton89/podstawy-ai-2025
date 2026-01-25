@@ -18,32 +18,124 @@ void Map::addObstacle(const std::vector<sf::Vector2f>& vertices) {
 
 // tu jakieś losowe przeszkody na mapie
 void Map::generateDefaultObstacles() {
+    // left top corner
     addObstacle({
-        {150.f, 150.f},
+        {350.f, 150.f},
         {400.f, 150.f},
         {400.f, 300.f},
+        {350.f, 300.f}
+    });
+    addObstacle({
+        {150.f, 250.f},
+        {350.f, 250.f},
+        {350.f, 300.f},
         {150.f, 300.f}
     });
 
+    // middle blob
+    addObstacle({
+        {750.f, 250.f},
+        {850.f, 250.f},
+        {1000.f, 400.f},
+        {1000.f, 600.f},
+        {900.f, 600.f},
+        {750.f, 500.f}
+    });
+    addObstacle({
+        {600.f, 400.f},
+        {750.f, 400.f},
+        {750.f, 500.f},
+        {600.f, 500.f}
+    });
+
+    // below blob
+    addObstacle({
+        {750.f, 620.f},
+        {900.f, 720.f},
+        {900.f, 730.f},
+        {750.f, 730.f}
+    });
+    addObstacle({
+        {550.f, 620.f},
+        {650.f, 620.f},
+        {650.f, 730.f},
+        {550.f, 730.f}
+    });
+
+    // top leftish square
+    addObstacle({
+        {550.f, 200.f},
+        {650.f, 200.f},
+        {650.f, 300.f},
+        {550.f, 300.f}
+    });
+
+    // slots left side
+    addObstacle({
+        {250.f, 390.f},
+        {350.f, 390.f},
+        {350.f, 440.f},
+        {250.f, 440.f}
+    });
+    addObstacle({
+        {250.f, 500.f},
+        {350.f, 500.f},
+        {350.f, 550.f},
+        {250.f, 550.f}
+    });
+    addObstacle({
+        {250.f, 600.f},
+        {350.f, 600.f},
+        {350.f, 650.f},
+        {250.f, 650.f}
+    });
+    addObstacle({
+        {250.f, 700.f},
+        {350.f, 700.f},
+        {350.f, 750.f},
+        {250.f, 750.f}
+    });
+    addObstacle({
+        {250.f, 700.f},
+        {350.f, 700.f},
+        {350.f, 750.f},
+        {250.f, 750.f}
+    });
+    addObstacle({
+        {250.f, 810.f},
+        {350.f, 810.f},
+        {350.f, 860.f},
+        {250.f, 860.f}
+    });
+
+    // right traingle fan
+    addObstacle({
+        {1150.f, 300.f},
+        {1250.f, 200.f},
+        {1250.f, 300.f}
+    });
+    addObstacle({
+        {1350.f, 300.f},
+        {1350.f, 200.f},
+        {1450.f, 300.f}
+    });
+    addObstacle({
+        {1150.f, 400.f},
+        {1250.f, 400.f},
+        {1250.f, 500.f}
+    });
+    addObstacle({
+        {1350.f, 500.f},
+        {1350.f, 400.f},
+        {1450.f, 400.f}
+    });
+
+    // right bottom corner
     addObstacle({
         {1200.f, 600.f},
         {1450.f, 600.f},
         {1450.f, 750.f},
         {1200.f, 750.f}
-    });
-
-    addObstacle({
-        {750.f, 300.f},
-        {850.f, 300.f},
-        {850.f, 600.f},
-        {750.f, 600.f}
-    });
-
-    addObstacle({
-        {600.f, 400.f},
-        {1000.f, 400.f},
-        {1000.f, 500.f},
-        {600.f, 500.f}
     });
 }
 

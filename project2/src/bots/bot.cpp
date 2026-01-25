@@ -23,6 +23,14 @@ void Bot::selectRandomNode() {
     currentPathIndex = 0;
 }
 
+void Bot::setTargetNode(const sf::Vector2f& targetPos) {
+    if (!navGraph)
+        return;
+
+    currentPath = navGraph->findPath(position, targetPos);
+    currentPathIndex = 0;
+}
+
 void Bot::followPath(float deltaTime) {
     if (currentPath.empty() || currentPathIndex >= currentPath.size())
         return;

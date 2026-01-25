@@ -5,7 +5,7 @@
 
 RocketLauncher::RocketLauncher() {
 	damage = Parameters::ROCKET_DAMAGE;
-	ammo = Parameters::ROCKET_MAX_AMMO;
+	ammo = Parameters::ROCKET_RESPAWN_AMMO;
 	cooldown = Parameters::ROCKET_RELOAD_TIME;
 }
 

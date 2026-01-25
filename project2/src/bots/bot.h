@@ -19,11 +19,12 @@ public:
 	Game* game;
 	FSM fsm;
 	Health health;
-	RocketLauncher rocketLauncher;
 	RailGun railGun;
+	RocketLauncher rocketLauncher;
 
 	void setNavGraph(NavigationGraph* graph) { navGraph = graph; }
 	void selectRandomNode();
+	void setTargetNode(const sf::Vector2f& targetPos);
 	void setColor(const sf::Color& c) { color = c; }
 	const sf::Color& getColor() const { return color; }
 	const sf::Vector2f& getPosition() const { return position; }

@@ -38,11 +38,15 @@ public:
 private:
 	sf::RenderWindow window;
 	sf::Clock clock;
+	sf::Font textFont;
 
-	// TODO: do debugowania
-	bool showGraph = true;
+	// do debugowania
+	bool playerEnable = false;
+	bool showGraph = false;
 	bool showNodes = true;
 	bool showEdges = true;
+	bool showBotStats = true;
+	bool showCoordinates = false;
 
 	void processEvents();
 	void update(float deltaTime);

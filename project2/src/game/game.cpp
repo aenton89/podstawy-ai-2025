@@ -1,6 +1,7 @@
 #include "game.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <string>
 #include "../helpers/parameters.h"
 
 
@@ -10,6 +11,11 @@ Game::Game(): window(sf::VideoMode(Parameters::MAP_WIDTH, Parameters::MAP_HEIGHT
 	// to jest, żeby nie było zbyt szybko powtarzanych klawiszy - nie sterujemy postaciami więc można wyłączyć a toogle lepiej działa
 	window.setKeyRepeatEnabled(false);
 	sf::Vector2u winSize = window.getSize();
+
+	// zaladuj font do statystyk botow
+	if (!textFont.loadFromFile("../fonts/PublicSans-Black.ttf")) {
+		std::cerr << "ERR: can't load font for stats!\n";
+	}
 
 	generateMap();
 	spawnPickups();
@@ -34,24 +40,29 @@ void Game::processEvents() {
 			if (event.key.code == sf::Keyboard::Escape)
 				window.close();
 
-			// TODO: do debugowania
-			if (event.key.code == sf::Keyboard::G)
+			// Toggle debugujace:
+			if (event.key.code == sf::Keyboard::P)		// sterowanie 1-ym botem przez gracza
+				playerEnable = !playerEnable;
+			if (event.key.code == sf::Keyboard::G)		// rysowanie grafu nawigacji
 				showGraph = !showGraph;
-			if (event.key.code == sf::Keyboard::N)
+			if (event.key.code == sf::Keyboard::N)		// rysowanie wezlow
 				showNodes = !showNodes;
-			if (event.key.code == sf::Keyboard::E)
+			if (event.key.code == sf::Keyboard::E)		// rysowanie krawedzi
 				showEdges = !showEdges;
-			if (event.key.code == sf::Keyboard::D)
+			if (event.key.code == sf::Keyboard::I)		// rysowanie statystyk botow
+				showBotStats = !showBotStats;
+			if (event.key.code == sf::Keyboard::C)		// rysowanie koordynatow
+				showCoordinates = !showCoordinates;
+			if (event.key.code == sf::Keyboard::D)		// debug w konsoli
 				debug();
 		}
 	}
 }
 
 void Game::update(float deltaTime) {
-	// TODO: update botów i spawn heal'ów/amunicji
 	for (auto& bot : bots) {
 		// tylko dla 1. bota
-		if (bots.front() == bot) {
+		if (playerEnable && bots.front() == bot) {
 			sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
 			sf::Vector2f pos(pixelPos.x, pixelPos.y);
 
@@ -60,10 +71,8 @@ void Game::update(float deltaTime) {
 			bot->followPath(deltaTime);
 		}
 		else {
-			// losowe podążanie za ścieżką
-			bot->followPath(deltaTime);
-			if (bot->hasArrived())
-				bot->selectRandomNode();
+			// AI bots use FSM for decision making
+			bot->fsm.update(bot.get(), deltaTime);
 		}
 
 		// sprawdzenie czy trzeba przeładować i update stanu wizualizacji
@@ -98,12 +107,68 @@ void Game::render() {
 		botShape.setPosition(bot->getPosition());
 		botShape.setFillColor(bot->getColor());
 		window.draw(botShape);
+
+		if (showBotStats) {
+			// Pokaz satystyki bota nad nim
+			sf::Text statsText;
+			statsText.setFont(textFont);
+			statsText.setCharacterSize(12);
+			statsText.setFillColor(sf::Color::White);
+
+			// Format:
+			// HP | ammo railguna | ammo rakiet | stan FSM
+			std::string statsString = std::to_string(static_cast<int>(bot->health.getHealth())) +
+				" | " + std::to_string(bot->railGun.getAmmo()) +
+				" | " + std::to_string(bot->rocketLauncher.getAmmo()) + 
+				" | " + bot->fsm.getCurrentStateName();
+
+			statsText.setString(statsString);
+			
+			// wyswietla tekst nad botem
+			sf::FloatRect textBounds = statsText.getLocalBounds();
+			statsText.setOrigin(textBounds.width / 2.f, textBounds.height + 5.f);
+			statsText.setPosition(bot->getPosition().x, bot->getPosition().y - Parameters::BOT_RADIUS - 10.f);
+
+			window.draw(statsText);
+		}
 	}
 
 	// rysuj promienie railgunów
 	for (const auto& bot : bots) {
 		bot->railGun.draw(window);
 		bot->rocketLauncher.draw(window);
+	}
+
+	// rysuj koordynaty na krawedziach mapy
+	if (showCoordinates) {
+		sf:: Text coordText;
+		coordText.setFont(textFont);
+		coordText.setCharacterSize(10);
+		coordText.setFillColor(sf::Color::White);
+
+		// x
+		for (int x = 0; x <= Parameters::MAP_WIDTH; x += 100) {
+			coordText.setString(std::to_string(x));
+			coordText.setPosition(x - 5, 5); // top
+			window.draw(coordText);
+		}
+
+		// y
+		for (int y = 0; y <= Parameters::MAP_HEIGHT; y += 100) {
+			coordText.setString(std::to_string(y));
+			coordText.setPosition(5, y - 5); // left
+			window.draw(coordText);
+		}
+	}
+
+	// rysuj spawnpointy
+	sf::CircleShape spawnShape(30.f);
+	spawnShape.setOrigin(30.f, 30.f);
+
+	for (const auto& spawnPoint : spawnPoints) {
+		spawnShape.setPosition(spawnPoint);
+		spawnShape.setFillColor(sf::Color(255, 255, 255, 40));
+		window.draw(spawnShape);
 	}
 
 	window.display();
@@ -140,11 +205,14 @@ void Game::respawnDeadBots() {
 
 	for (auto& bot : bots) {
 		if (bot->health.getHealth() <= 0) {
-			// reset bot's health and position
+			// reset bot's health, ammo and position
 			bot->health.restore();
+			bot->railGun.setAmmo(Parameters::RAILGUN_RESPAWN_AMMO);
+			bot->rocketLauncher.setAmmo(Parameters::ROCKET_RESPAWN_AMMO);
 			sf::Vector2f spawnPoint = spawnPoints[dist(gen)];
 			bot->setPosition(spawnPoint);
 			bot->selectRandomNode();
+			bot->fsm.setState(BotState::RoamRandomly);
 
 			std::cout << "Bot " << bot->getId() << " respawned at (" << spawnPoint.x << ", " << spawnPoint.y << ")" << std::endl;
 		}
@@ -159,11 +227,17 @@ void Game::spawnBots() {
 		sf::Color::Magenta
 	};
 
-	std::uniform_int_distribution<size_t> dist(0, spawnPoints.size() - 1);
+	// spawnuj spawny
+	spawnPoints = std::vector<sf::Vector2f>{
+		{100.f, 100.f},
+		{1500.f, 100.f},
+		{100.f, 800.f},
+		{1500.f, 800.f}
+	};
 
 	for (int i = 0; i < Parameters::MAX_BOTS; ++i) {
 		// wylosuj spawnpointa
-		sf::Vector2f spawnPoint = spawnPoints[dist(gen)];
+		sf::Vector2f spawnPoint = spawnPoints[i];
 
 		// stwórz bota i ustaw mu graf, węzęł, kolor i wstaw do listy botów
 		auto bot = std::make_unique<Bot>(i, spawnPoint);
@@ -211,23 +285,22 @@ void Game::generateMap() {
 void Game::spawnPickups() {
 	// ustalone pozycje pickupów na mapie
 	// health packi (czerwony)
-	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(800.f, 450.f)));
-	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(400.f, 200.f)));
-	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(1200.f, 700.f)));
-	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(400.f, 700.f)));
-	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(1200.f, 200.f)));
+	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(300.f, 200.f)));
+	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(1140.f, 700.f)));
+	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(150.f, 670.f)));
+	pickups.push_back(std::make_unique<HealthPack>(sf::Vector2f(1300.f, 350.f)));
 
 	// railgun ammo (cyan)
-	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(200.f, 450.f)));
-	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(1400.f, 450.f)));
-	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(800.f, 150.f)));
-	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(800.f, 750.f)));
+	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(150.f, 425.f)));
+	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(1450.f, 500.f)));
+	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(800.f, 100.f)));
+	pickups.push_back(std::make_unique<RailGunAmmoPack>(sf::Vector2f(800.f, 820.f)));
 
-	// rocket ammo (żółty lol)
-	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(600.f, 300.f)));
-	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(1000.f, 300.f)));
-	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(600.f, 600.f)));
-	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(1000.f, 600.f)));
+	// rocket ammo (zolty lol)
+	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(700.f, 350.f)));
+	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(1150.f, 200.f)));
+	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(450.f, 670.f)));
+	pickups.push_back(std::make_unique<RocketAmmoPack>(sf::Vector2f(1140.f, 650.f)));
 }
 
 void Game::updatePickups(float deltaTime) {
